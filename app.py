@@ -1,19 +1,45 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import sqlite3, os, json
+import sqlite3
 from datetime import date, datetime, timedelta
 
 DB = "estoque_fornos.db"
 
 def init_db():
     con = sqlite3.connect(DB)
-    con.execute("""CREATE TABLE IF NOT EXISTS materiais (id INTEGER PRIMARY KEY, codigo TEXT UNIQUE, nome TEXT, categoria TEXT, unidade TEXT, peso_unit REAL)""")
+    # Apaga tabela antiga com trava
+    con.execute("DROP TABLE IF EXISTS materiais")
+    con.execute("""CREATE TABLE IF NOT EXISTS materiais (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        codigo TEXT,
+        nome TEXT,
+        marca TEXT,
+        categoria TEXT,
+        unidade TEXT,
+        peso_unit REAL,
+        fornecedor TEXT,
+        lote TEXT
+    )""")
     con.execute("""CREATE TABLE IF NOT EXISTS gavetas (id INTEGER PRIMARY KEY, nome TEXT)""")
-    con.execute("""CREATE TABLE IF NOT EXISTS estoque (id INTEGER PRIMARY KEY, gaveta_id INT, material_id INT, paletes INT, unit_por_palete INT, kilos_por_unit REAL, data_fab DATE, dias_validade INT, data_validade DATE, FOREIGN KEY(material_id) REFERENCES materiais(id))""")
-    con.execute("""CREATE TABLE IF NOT EXISTS historico (id INTEGER PRIMARY KEY, data TEXT, gaveta_id INT, material_id INT, tipo TEXT, paletes INT, total_kg REAL)""")
+    con.execute("""CREATE TABLE IF NOT EXISTS estoque (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        gaveta_id INT,
+        material_id INT,
+        codigo TEXT,
+        nome TEXT,
+        marca TEXT,
+        paletes INT,
+        unit_por_palete INT,
+        kilos_por_unit REAL,
+        data_fab DATE,
+        dias_validade INT,
+        data_validade DATE,
+        lote TEXT,
+        obs TEXT
+    )""")
+    con.execute("""CREATE TABLE IF NOT EXISTS historico (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT, gaveta_id INT, codigo TEXT, nome TEXT, marca TEXT, tipo TEXT, paletes INT, total_kg REAL)""")
     con.execute("""CREATE TABLE IF NOT EXISTS config (gaveta_id INT PRIMARY KEY, estoque_min REAL)""")
-    # Cria 20 gavetas se não existir
     cur = con.execute("SELECT COUNT(*) FROM gavetas").fetchone()[0]
     if cur == 0:
         for i in range(1,21):
@@ -24,7 +50,7 @@ def init_db():
 
 init_db()
 
-st.set_page_config(layout="wide", page_title="Reforma Fornos - Completo")
+st.set_page_config(layout="wide", page_title="Reforma Fornos - Marca e ID Livre")
 st.markdown("""
 <style>
 .gaveta-principal { background: linear-gradient(90deg, #5B8DEF, #3A6ED8); border: 3px solid #1E40AF; border-radius: 12px; padding: 20px; text-align: center; color: white; font-size: 26px; font-weight: 800; margin-bottom: 15px; }
@@ -33,41 +59,55 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if 'selecionada' not in st.session_state: st.session_state.selecionada = None
-if 'logado' not in st.session_state: st.session_state.logado = True # login simplificado
 
-st.markdown('<div class="gaveta-principal">🔧 REFORMA DE FORNOS - SISTEMA COMPLETO COM CADASTRO</div>', unsafe_allow_html=True)
+st.markdown('<div class="gaveta-principal">🔧 REFORMA DE FORNOS - MARCA + ID LIVRE</div>', unsafe_allow_html=True)
 
-# --- ABA CADASTRO DE MATERIAIS ---
-tab_materiais, tab_estoque, tab_alertas = st.tabs(["📦 CADASTRO DE MATERIAIS", "📂 GAVETAS - ESTOQUE DENTRO", "🚨 ALERTAS E HISTÓRICO"])
+tab_materiais, tab_estoque, tab_alertas = st.tabs(["📦 CADASTRO MATERIAIS (ID + MARCA)", "📂 GAVETAS - DENTRO", "🚨 ALERTAS + HISTÓRICO"])
 
 with tab_materiais:
-    st.subheader("Cadastro de Materiais - fica salvo!")
+    st.subheader("Cadastro com ID LIVRE e MARCA - pode repetir mesmo material")
     con = sqlite3.connect(DB)
 
-    with st.form("form_material"):
-        c1,c2,c3,c4 = st.columns(4)
-        codigo = c1.text_input("Código", placeholder="Ex: TIJ-001")
-        nome = c2.text_input("Nome Material", placeholder="Ex: Tijolo Refratário 25kg")
-        categoria = c3.selectbox("Categoria", ["Refratário","Cimento","Isolante","Ferragem","Outro"])
-        unidade = c4.selectbox("Unidade", ["KG","TON","UN","M","M²","LITROS"])
-        peso = st.number_input("Peso padrão por unitário (KG)", min_value=0.1, value=25.0)
-        if st.form_submit_button("💾 Cadastrar Material", type="primary"):
-            try:
-                con.execute("INSERT INTO materiais (codigo, nome, categoria, unidade, peso_unit) VALUES (?,?,?,?,?)", (codigo, nome, categoria, unidade, peso))
+    with st.form("form_material", clear_on_submit=True):
+        st.write("Pode cadastrar mesmo código várias vezes com marcas diferentes!")
+        c1,c2,c3 = st.columns(3)
+        codigo = c1.text_input("ID / Código (LIVRE - pode repetir)", placeholder="Ex: TIJ-001")
+        nome = c2.text_input("Nome Material", placeholder="Ex: Tijolo Refratário")
+        marca = c3.text_input("MARCA", placeholder="Ex: Santa Cruz, Refratek, Brasilit")
+
+        c4,c5,c6,c7 = st.columns(4)
+        categoria = c4.selectbox("Categoria", ["Refratário","Cimento","Isolante","Ferragem","Manta","Outro"])
+        unidade = c5.selectbox("Unidade", ["KG","TON","UN","M","M²","LITROS"])
+        peso = c6.number_input("Peso p/ unitário (KG)", min_value=0.1, value=25.0)
+        fornecedor = c7.text_input("Fornecedor", placeholder="Ex: Leroy")
+
+        lote = st.text_input("Lote / Referência", placeholder="Ex: LOTE-2025-001")
+
+        if st.form_submit_button("💾 Cadastrar - ID NÃO TRAVA", type="primary", use_container_width=True):
+            if not codigo or not nome:
+                st.error("Preencha Código e Nome!")
+            else:
+                con.execute("INSERT INTO materiais (codigo, nome, marca, categoria, unidade, peso_unit, fornecedor, lote) VALUES (?,?,?,?,?,?,?,?)",
+                            (codigo, nome, marca, categoria, unidade, peso, fornecedor, lote))
                 con.commit()
-                st.success(f"Material {codigo} - {nome} cadastrado!")
-            except sqlite3.IntegrityError:
-                st.error("Código já existe!")
+                st.success(f"✅ Cadastrado: {codigo} - {nome} - MARCA: {marca} (pode repetir!)")
 
     st.divider()
-    df_materiais = pd.read_sql("SELECT * FROM materiais", con)
-    st.dataframe(df_materiais, use_container_width=True)
+    df_materiais = pd.read_sql("SELECT * FROM materiais ORDER BY id DESC", con)
 
-    # Editar / Excluir
+    # FILTRO POR MARCA
     if not df_materiais.empty:
-        id_del = st.selectbox("Excluir material", df_materiais["id"].tolist(), format_func=lambda x: f"{x} - {df_materiais[df_materiais.id==x].iloc[0]['nome']}")
-        if st.button("🗑️ Excluir"):
-            con.execute("DELETE FROM materiais WHERE id=?", (id_del,))
+        filtro_marca = st.selectbox("Filtrar por Marca", ["TODAS"] + sorted(df_materiais["marca"].dropna().unique().tolist()))
+        if filtro_marca!= "TODAS":
+            df_materiais = df_materiais[df_materiais["marca"]==filtro_marca]
+
+    st.dataframe(df_materiais, use_container_width=True, height=400)
+
+    if not df_materiais.empty:
+        c_del1, c_del2 = st.columns(2)
+        id_del = c_del1.selectbox("Selecione ID para excluir", df_materiais["id"].tolist(), format_func=lambda x: f"ID {x} - {df_materiais[df_materiais.id==x].iloc[0]['codigo']} - {df_materiais[df_materiais.id==x].iloc[0]['nome']} - {df_materiais[df_materiais.id==x].iloc[0]['marca']}")
+        if c_del2.button("🗑️ Excluir esse cadastro"):
+            con.execute("DELETE FROM materiais WHERE id=?", (int(id_del),))
             con.commit()
             st.rerun()
     con.close()
@@ -75,137 +115,104 @@ with tab_materiais:
 with tab_estoque:
     con = sqlite3.connect(DB)
     df_materiais = pd.read_sql("SELECT * FROM materiais", con)
-    df_gavetas = pd.read_sql("SELECT * FROM gavetas", con)
     con.close()
 
     if df_materiais.empty:
-        st.warning("⚠️ Cadastre um material primeiro na aba CADASTRO DE MATERIAIS")
+        st.warning("⚠️ Cadastre material primeiro com MARCA")
         st.stop()
 
-    # GRID GAVETAS - TUDO ARMAZENADO DENTRO
     cols = st.columns(5)
     for i in range(1,21):
-        with cols[(i-1)%5]:
-            # Mostra quantos materiais tem dentro
-            con = sqlite3.connect(DB)
-            qtd = con.execute("SELECT COUNT(*) FROM estoque WHERE gaveta_id=?", (i,)).fetchone()[0]
-            total_kg = con.execute("SELECT SUM(paletes * unit_por_palete * kilos_por_unit) FROM estoque WHERE gaveta_id=?", (i,)).fetchone()[0] or 0
-            con.close()
-            label = f"📦 Gaveta {i:02d}\n{qtd} mat - {total_kg:.0f} KG"
-            tipo = "primary" if st.session_state.selecionada == i else "secondary"
-            if st.button(label, key=f"g_{i}", use_container_width=True, type=tipo):
-                st.session_state.selecionada = None if st.session_state.selecionada == i else i
-                st.rerun()
+        con = sqlite3.connect(DB)
+        qtd = con.execute("SELECT COUNT(*) FROM estoque WHERE gaveta_id=?", (i,)).fetchone()[0]
+        total_kg = con.execute("SELECT SUM(paletes * unit_por_palete * kilos_por_unit) FROM estoque WHERE gaveta_id=?", (i,)).fetchone()[0] or 0
+        con.close()
+        tipo = "primary" if st.session_state.selecionada == i else "secondary"
+        if st.button(f"📦 Gaveta {i:02d}\n{qtd} itens\n{total_kg:.0f} KG", key=f"g_{i}", use_container_width=True, type=tipo):
+            st.session_state.selecionada = None if st.session_state.selecionada == i else i
+            st.rerun()
 
     if st.session_state.selecionada:
         sel = st.session_state.selecionada
         st.markdown('<div class="gaveta-aberta">', unsafe_allow_html=True)
-        st.markdown(f"### 📂 DENTRO DA GAVETA {sel:02d} - Informações armazenadas aqui")
+        st.markdown(f"### 📂 GAVETA {sel:02d} - Pode repetir mesmo material com marcas diferentes")
 
-        # FORM PARA ADICIONAR MATERIAL DENTRO DA GAVETA
         con = sqlite3.connect(DB)
-        with st.form(f"add_gaveta_{sel}"):
-            st.write("Adicionar material dentro desta gaveta:")
-            c1,c2,c3,c4,c5 = st.columns(5)
-            mat_escolhido = c1.selectbox("Material cadastrado", df_materiais["id"].tolist(), format_func=lambda x: f"{df_materiais[df_materiais.id==x].iloc[0]['codigo']} - {df_materiais[df_materiais.id==x].iloc[0]['nome']}", key=f"mat_{sel}")
-            paletes = c2.number_input("1️⃣ Paletes", min_value=1, value=1, key=f"pal_{sel}")
-            unit_pal = c3.number_input("2️⃣ Unitários/Palete", min_value=1, value=56, key=f"unit_{sel}")
-            kilos = c4.number_input("3️⃣ Kilos/Unit", min_value=0.1, value=25.0, key=f"kg_{sel}")
-            data_fab = c5.date_input("📅 Fabricação", value=date.today(), key=f"fab_{sel}")
-            dias_val = st.number_input("⏳ Validade em dias", min_value=1, value=90, key=f"val_{sel}")
+        with st.form(f"add_gaveta_{sel}", clear_on_submit=True):
+            st.write("Adicionar DENTRO da gaveta - ID LIVRE, pode repetir:")
+            c1,c2 = st.columns(2)
+            # Select mostra CODIGO + NOME + MARCA + ID
+            mat_escolhido_id = c1.selectbox("Escolha material cadastrado (mostra MARCA)", df_materiais["id"].tolist(),
+                format_func=lambda x: f"ID:{x} | {df_materiais[df_materiais.id==x].iloc[0]['codigo']} - {df_materiais[df_materiais.id==x].iloc[0]['nome']} - MARCA:{df_materiais[df_materiais.id==x].iloc[0]['marca']}", key=f"mat_{sel}")
 
-            if st.form_submit_button("➕ Adicionar DENTRO da Gaveta", type="primary", use_container_width=True):
+            # Campos editáveis para repetir com variação
+            row_mat = df_materiais[df_materiais.id==mat_escolhido_id].iloc[0]
+            c2a,c2b,c2c = st.columns(3)
+            codigo_edit = c2a.text_input("Código (pode editar)", value=row_mat["codigo"], key=f"cod_{sel}")
+            marca_edit = c2b.text_input("MARCA (pode editar)", value=row_mat["marca"], key=f"marca_{sel}")
+            lote_edit = c2c.text_input("Lote", value=row_mat["lote"] or "", key=f"lote_{sel}")
+
+            c3,c4,c5,c6,c7 = st.columns(5)
+            paletes = c3.number_input("1️⃣ Paletes", min_value=1, value=1, key=f"pal_{sel}")
+            unit_pal = c4.number_input("2️⃣ Unit/Palete", min_value=1, value=56, key=f"unit_{sel}")
+            kilos = c5.number_input("3️⃣ Kg/Unit", min_value=0.1, value=float(row_mat["peso_unit"]), key=f"kg_{sel}")
+            data_fab = c6.date_input("📅 Fabricação", value=date.today(), key=f"fab_{sel}")
+            dias_val = c7.number_input("Validade dias", min_value=1, value=90, key=f"val_{sel}")
+
+            obs = st.text_input("Observação", placeholder="Ex: Material com marca diferente mas mesmo código")
+
+            if st.form_submit_button("➕ Adicionar DENTRO - REPETIR PERMITIDO", type="primary", use_container_width=True):
                 data_validade = data_fab + timedelta(days=dias_val)
-                con.execute("INSERT INTO estoque (gaveta_id, material_id, paletes, unit_por_palete, kilos_por_unit, data_fab, dias_validade, data_validade) VALUES (?,?,?,?,?,?,?,?)",
-                            (sel, mat_escolhido, paletes, unit_pal, kilos, data_fab.isoformat(), dias_val, data_validade.isoformat()))
-                # Histórico ENTRADA
+                # Salva COPIA com codigo/nome/marca editável - permite repetir
+                con.execute("""INSERT INTO estoque (gaveta_id, material_id, codigo, nome, marca, paletes, unit_por_palete, kilos_por_unit, data_fab, dias_validade, data_validade, lote, obs)
+                               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                            (sel, int(mat_escolhido_id), codigo_edit, row_mat["nome"], marca_edit, paletes, unit_pal, kilos, data_fab.isoformat(), dias_val, data_validade.isoformat(), lote_edit, obs))
                 total_kg = paletes * unit_pal * kilos
-                con.execute("INSERT INTO historico (data, gaveta_id, material_id, tipo, paletes, total_kg) VALUES (?,?,?,?,?,?)",
-                            (datetime.now().isoformat(), sel, mat_escolhido, "ENTRADA", paletes, total_kg))
+                con.execute("INSERT INTO historico (data, gaveta_id, codigo, nome, marca, tipo, paletes, total_kg) VALUES (?,?,?,?,?,?,?,?)",
+                            (datetime.now().isoformat(), sel, codigo_edit, row_mat["nome"], marca_edit, "ENTRADA", paletes, total_kg))
                 con.commit()
-                st.success(f"Adicionado DENTRO da gaveta {sel}: {total_kg:.0f} KG")
+                st.success(f"✅ Adicionado DENTRO gaveta {sel}: {codigo_edit} - {marca_edit} - {total_kg:.0f} KG - Pode repetir mesmo ID!")
                 st.rerun()
 
-        st.divider()
-        # MOSTRA TUDO QUE ESTÁ ARMAZENADO DENTRO DESSA GAVETA
-        df_dentro = pd.read_sql(f"""
-            SELECT e.id, m.codigo, m.nome, m.categoria, e.paletes, e.unit_por_palete, e.kilos_por_unit,
-                   (e.paletes * e.unit_por_palete) as total_unit,
-                   (e.paletes * e.unit_por_palete * e.kilos_por_unit) as total_kg,
-                   e.data_fab, e.dias_validade, e.data_validade
-            FROM estoque e JOIN materiais m ON e.material_id = m.id
-            WHERE e.gaveta_id = {sel}
-        """, con)
+        df_dentro = pd.read_sql(f"SELECT * FROM estoque WHERE gaveta_id={sel} ORDER BY id DESC", con)
 
         if not df_dentro.empty:
             df_dentro["data_validade"] = pd.to_datetime(df_dentro["data_validade"])
             df_dentro["dias_vencer"] = (df_dentro["data_validade"] - pd.to_datetime(date.today())).dt.days
             df_dentro["status"] = df_dentro["dias_vencer"].apply(lambda x: "🔴 VENCIDO" if x<0 else ("🟡 ATENÇÃO" if x<=30 else "🟢 OK"))
+            df_dentro["total_kg"] = df_dentro["paletes"] * df_dentro["unit_por_palete"] * df_dentro["kilos_por_unit"]
 
-            st.dataframe(df_dentro, use_container_width=True)
+            st.markdown("#### 📋 O que tem DENTRO desta gaveta (pode ter mesmo código repetido com marcas diferentes)")
+            st.dataframe(df_dentro[["id","codigo","nome","marca","lote","paletes","unit_por_palete","kilos_por_unit","total_kg","data_fab","data_validade","dias_vencer","status","obs"]], use_container_width=True)
 
             # SAÍDA
-            st.markdown("#### 🔄 Registrar SAÍDA desta gaveta")
             cs1, cs2 = st.columns(2)
-            id_saida = cs1.selectbox("Qual item tirar?", df_dentro["id"].tolist(), format_func=lambda x: f"ID {x} - {df_dentro[df_dentro.id==x].iloc[0]['nome']} - {df_dentro[df_dentro.id==x].iloc[0]['total_kg']:.0f} KG")
-            qtd_saida = cs2.number_input("Paletes para SAÍDA", min_value=1, value=1)
-            if cs2.button("📤 Confirmar SAÍDA", type="primary"):
-                # Baixa do estoque e registra histórico
+            id_saida = cs1.selectbox("Tirar qual ID?", df_dentro["id"].tolist(), format_func=lambda x: f"ID Estoque {x} - {df_dentro[df_dentro.id==x].iloc[0]['codigo']} - MARCA {df_dentro[df_dentro.id==x].iloc[0]['marca']} - {df_dentro[df_dentro.id==x].iloc[0]['total_kg']:.0f}KG")
+            qtd_saida = cs2.number_input("Paletes SAÍDA", min_value=1, value=1, key=f"qtd_s_{sel}")
+            if cs2.button("📤 Registrar SAÍDA", type="primary", key=f"btn_s_{sel}"):
                 row = df_dentro[df_dentro.id==id_saida].iloc[0]
                 total_kg_saida = qtd_saida * row["unit_por_palete"] * row["kilos_por_unit"]
-                con.execute("INSERT INTO historico (data, gaveta_id, material_id, tipo, paletes, total_kg) VALUES (?,?,?,?,?,?)",
-                            (datetime.now().isoformat(), sel, row["id"], "SAIDA", qtd_saida, total_kg_saida))
-                # Atualiza ou remove
+                con.execute("INSERT INTO historico (data, gaveta_id, codigo, nome, marca, tipo, paletes, total_kg) VALUES (?,?,?,?,?,?,?,?)",
+                            (datetime.now().isoformat(), sel, row["codigo"], row["nome"], row["marca"], "SAIDA", qtd_saida, total_kg_saida))
                 if qtd_saida >= row["paletes"]:
                     con.execute("DELETE FROM estoque WHERE id=?", (int(id_saida),))
                 else:
                     con.execute("UPDATE estoque SET paletes = paletes -? WHERE id=?", (int(qtd_saida), int(id_saida)))
                 con.commit()
-                st.success(f"Saída {total_kg_saida:.0f} KG registrada!"); st.rerun()
+                st.success(f"Saída {total_kg_saida:.0f} KG"); st.rerun()
         else:
-            st.info("Gaveta vazia - adicione material acima, fica armazenado aqui dentro")
-
+            st.info("Gaveta vazia")
         con.close()
         st.markdown('</div>', unsafe_allow_html=True)
 
 with tab_alertas:
     con = sqlite3.connect(DB)
     df_hist = pd.read_sql("SELECT * FROM historico", con)
-    df_est = pd.read_sql("SELECT gaveta_id, SUM(paletes * unit_por_palete * kilos_por_unit) as total FROM estoque GROUP BY gaveta_id", con)
-    df_config = pd.read_sql("SELECT * FROM config", con)
-    df_materiais = pd.read_sql("SELECT * FROM materiais", con)
     con.close()
-
     if not df_hist.empty:
         df_hist["data"] = pd.to_datetime(df_hist["data"])
-        st.subheader("📊 Histórico Diário / Semanal / Mensal / Semestral / Anual")
-        periodo = st.selectbox("Período", ["Diário","Semanal","Mensal","Semestral","Anual"])
-        if periodo=="Diário": df_hist["periodo"] = df_hist["data"].dt.date
-        elif periodo=="Semanal": df_hist["periodo"] = df_hist["data"].dt.isocalendar().week.astype(str) + "/" + df_hist["data"].dt.year.astype(str)
-        elif periodo=="Mensal": df_hist["periodo"] = df_hist["data"].dt.to_period("M").astype(str)
-        elif periodo=="Semestral": df_hist["periodo"] = df_hist["data"].dt.year.astype(str) + "-S" + ((df_hist["data"].dt.month-1)//6 +1).astype(str)
-        else: df_hist["periodo"] = df_hist["data"].dt.year
-
+        df_hist["periodo"] = df_hist["data"].dt.to_period("M").astype(str)
         df_res = df_hist.groupby(["periodo","tipo"])["total_kg"].sum().reset_index()
         fig = px.bar(df_res, x="periodo", y="total_kg", color="tipo", barmode="group", color_discrete_map={"ENTRADA":"#16A34A","SAIDA":"#DC2626"})
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(df_hist.sort_values("data", ascending=False), use_container_width=True)
-    else:
-        st.info("Sem histórico ainda")
-
-    st.divider()
-    st.subheader("🚨 Alertas de Compra")
-    alertas = []
-    for _, cfg in df_config.iterrows():
-        gid = cfg["gaveta_id"]
-        estoque = df_est[df_est.gaveta_id==gid]["total"].sum() if not df_est.empty and gid in df_est.gaveta_id.values else 0
-        minimo = cfg["estoque_min"]
-        if estoque <= minimo:
-            alertas.append({"Gaveta": gid, "Estoque": estoque, "Mínimo": minimo, "Comprar": minimo*2 - estoque, "Motivo": "ESTOQUE BAIXO"})
-
-    if alertas:
-        st.dataframe(pd.DataFrame(alertas), use_container_width=True)
-    else:
-        st.success("✅ Nenhum alerta - estoques OK")
-
-st.sidebar.info("Tudo salvo em estoque_fornos.db - não perde ao fechar!")
