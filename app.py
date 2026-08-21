@@ -51,7 +51,6 @@ if "gavetas" not in st.session_state:
   st.session_state.gavetas = pd.DataFrame(
       columns=["Nome_Gaveta", "Localizacao", "Descricao", "Status"]
   )
-  # Exemplo inicial de gaveta
   st.session_state.gavetas.loc[0] = [
       "Gaveta de Insumos Básicos",
       "Galpão 1 - Corredor A - Estante 2",
@@ -60,7 +59,6 @@ if "gavetas" not in st.session_state:
   ]
 
 if "materiais_gaveta" not in st.session_state:
-  # Tabela interna com os campos solicitados, incluindo Data/Hora automática
   st.session_state.materiais_gaveta = pd.DataFrame(
       columns=[
           "Nome_Gaveta",
@@ -77,7 +75,6 @@ if "materiais_gaveta" not in st.session_state:
           "Curva_ABC",
       ]
   )
-  # Exemplo inicial de item
   st.session_state.materiais_gaveta.loc[0] = [
       "Gaveta de Insumos Básicos",
       "MAT-001",
@@ -216,39 +213,51 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
       with col_sai:
         saidas = st.number_input("Saídas", value=0.0, min_value=0.0)
 
-      btn_salvar = st.form_submit_button(
-          "💾 Salvar Material (Gera Data/Hora Automática)"
-      )
+      btn_salvar = st.form_submit_button("💾 Salvar Novo Material")
 
       if btn_salvar:
         if id_material:
-          # Gera data e hora atual do sistema automaticamente no momento do registro
-          data_hora_atual = datetime.now()
+          # Verifica se o ID já existe nesta gaveta
+          existe = not st.session_state.materiais_gaveta[
+              (
+                  st.session_state.materiais_gaveta["Nome_Gaveta"]
+                  == nome_gaveta_atual
+              )
+              & (
+                  st.session_state.materiais_gaveta["ID_Material"]
+                  == id_material
+              )
+          ].empty
 
-          novo_item = pd.DataFrame(
-              [[
-                  nome_gaveta_atual,
-                  id_material,
-                  desc,
-                  marca,
-                  lote,
-                  total1,
-                  total2,
-                  total3,
-                  entradas,
-                  saidas,
-                  data_hora_atual,
-                  curva_abc,
-              ]],
-              columns=st.session_state.materiais_gaveta.columns,
-          )
-          st.session_state.materiais_gaveta = pd.concat(
-              [st.session_state.materiais_gaveta, novo_item], ignore_index=True
-          )
-          st.success(
-              f"Material adicionado com sucesso em {data_hora_atual.strftime('%d/%m/%Y %H:%M:%S')}!"
-          )
-          st.rerun()
+          if existe:
+            st.error(
+                f"O ID '{id_material}' já existe nesta gaveta! Use a opção de"
+                " edição abaixo para alterá-lo."
+            )
+          else:
+            data_hora_atual = datetime.now()
+            novo_item = pd.DataFrame(
+                [[
+                    nome_gaveta_atual,
+                    id_material,
+                    desc,
+                    marca,
+                    lote,
+                    total1,
+                    total2,
+                    total3,
+                    entradas,
+                    saidas,
+                    data_hora_atual,
+                    curva_abc,
+                ]],
+                columns=st.session_state.materiais_gaveta.columns,
+            )
+            st.session_state.materiais_gaveta = pd.concat(
+                [st.session_state.materiais_gaveta, novo_item], ignore_index=True
+            )
+            st.success("Material adicionado com sucesso!")
+            st.rerun()
         else:
           st.warning("O campo ID do Material é obrigatório.")
 
@@ -261,7 +270,7 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
     ].copy()
 
     if not df_tabela.empty:
-      # Cálculos solicitados
+      # Cálculos
       df_tabela["Total em Estoque"] = (
           df_tabela["Total1"] * df_tabela["Total2"] * df_tabela["Total3"]
       )
@@ -271,12 +280,10 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           - df_tabela["Saidas"]
       )
 
-      # Cálculo automático do tempo que o material está no estoque
       agora = pd.to_datetime(datetime.now())
       df_tabela["Data_Hora_Movimentacao"] = pd.to_datetime(
           df_tabela["Data_Hora_Movimentacao"]
       )
-      # Calcula a diferença em dias e horas
       diferenca = agora - df_tabela["Data_Hora_Movimentacao"]
       df_tabela["Tempo no Estoque"] = (
           diferenca.dt.days.astype(str)
@@ -285,15 +292,11 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           + "h"
       )
 
-      # Formata a data/hora para exibição legível
       df_tabela["Data/Hora Registro"] = df_tabela[
           "Data_Hora_Movimentacao"
       ].dt.strftime("%d/%m/%Y %H:%M:%S")
-
-      # Local de Armazenagem puxado do cadastro da gaveta
       df_tabela["Local de Armazenagem"] = dados_gaveta["Localizacao"]
 
-      # Colunas de exibição final
       colunas_exibicao = [
           "ID_Material",
           "Descricao",
@@ -312,14 +315,94 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           "Local de Armazenagem",
       ]
 
-      df_exibir = df_tabela[colunas_exibicao]
+      st.dataframe(df_tabela[colunas_exibicao], use_container_width=True)
 
-      st.dataframe(df_exibir, use_container_width=True)
+      # -------------------------------------------------------------
+      # EDITAR REGISTRO EXISTENTE (Novos campos de multiplicação e movimentação)
+      # -------------------------------------------------------------
+      st.markdown("---")
+      st.subheader("✏️ Editar Multiplicação e Movimentação de um Material")
+      id_para_editar = st.selectbox(
+          "Selecione o ID do Material para editar:",
+          df_tabela["ID_Material"].tolist(),
+          key="select_editar",
+      )
 
-      st.markdown("### 🗑️ Excluir Registro Específico da Tabela")
+      # Pega os dados atuais do item selecionado
+      item_atual = df_tabela[df_tabela["ID_Material"] == id_para_editar].iloc[0]
+
+      with st.form("form_editar_material"):
+        st.markdown(
+            f"Editando item: **{id_para_editar} - {item_atual['Descricao']}**"
+        )
+        c_e1, c_e2, c_e3, c_e4, c_e5 = st.columns(5)
+        with c_e1:
+          novo_t1 = st.number_input(
+              "Total 1", value=float(item_atual["Total1"]), min_value=0.0
+          )
+        with c_e2:
+          novo_t2 = st.number_input(
+              "Total 2", value=float(item_atual["Total2"]), min_value=0.0
+          )
+        with c_e3:
+          novo_t3 = st.number_input(
+              "Total 3", value=float(item_atual["Total3"]), min_value=0.0
+          )
+        with c_e4:
+          nova_entrada = st.number_input(
+              "Entradas", value=float(item_atual["Entradas"]), min_value=0.0
+          )
+        with c_e5:
+          nova_saida = st.number_input(
+              "Saídas", value=float(item_atual["Saidas"]), min_value=0.0
+          )
+
+        btn_atualizar = st.form_submit_button(
+            "🔄 Atualizar Material (Atualiza Data/Hora)"
+        )
+
+        if btn_atualizar:
+          # Atualiza os valores na base global (session_state)
+          idx_global = st.session_state.materiais_gaveta[
+              (
+                  st.session_state.materiais_gaveta["Nome_Gaveta"]
+                  == nome_gaveta_atual
+              )
+              & (
+                  st.session_state.materiais_gaveta["ID_Material"]
+                  == id_para_editar
+              )
+          ].index
+
+          st.session_state.materiais_gaveta.loc[idx_global, "Total1"] = novo_t1
+          st.session_state.materiais_gaveta.loc[idx_global, "Total2"] = novo_t2
+          st.session_state.materiais_gaveta.loc[idx_global, "Total3"] = novo_t3
+          st.session_state.materiais_gaveta.loc[idx_global, "Entradas"] = (
+              nova_entrada
+          )
+          st.session_state.materiais_gaveta.loc[idx_global, "Saidas"] = (
+              nova_saida
+          )
+          # Atualiza também a data/hora da última alteração de movimentação
+          st.session_state.materiais_gaveta.loc[
+              idx_global, "Data_Hora_Movimentacao"
+          ] = datetime.now()
+
+          st.success(
+              f"Material '{id_para_editar}' atualizado com sucesso (Nova"
+              " data/hora registrada)!"
+          )
+          st.rerun()
+
+      # -------------------------------------------------------------
+      # EXCLUIR REGISTRO
+      # -------------------------------------------------------------
+      st.markdown("---")
+      st.subheader("🗑️ Excluir Registro Específico da Tabela")
       id_para_excluir = st.selectbox(
           "Selecione o ID do Material para excluir:",
           df_tabela["ID_Material"].tolist(),
+          key="select_excluir",
       )
       if st.button("❌ Excluir Registro"):
         st.session_state.materiais_gaveta = st.session_state.materiais_gaveta[
@@ -358,12 +441,10 @@ elif menu == "📊 Dashboard":
         - df_global["Saidas"]
     )
 
-    # Formata a data e hora para o dashboard
     df_global["Data/Hora Registro"] = pd.to_datetime(
         df_global["Data_Hora_Movimentacao"]
     ).dt.strftime("%d/%m/%Y %H:%M:%S")
 
-    # Junta com a localização
     df_global = pd.merge(
         df_global,
         st.session_state.gavetas[["Nome_Gaveta", "Localizacao"]],
