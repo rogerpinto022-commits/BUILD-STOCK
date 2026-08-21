@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="BUILD STOCK - Armário Inteligente", page_icon="📦", layout="wide"
 )
 
-# Estilização Visual Customizada (Tema Rústico / Clássico / Madeira & Bronze)
+# Estilização Visual Customizada
 st.markdown(
     """
     <style>
@@ -29,7 +29,6 @@ st.markdown(
 if "autenticado" not in st.session_state:
   st.session_state.autenticado = False
 
-# Senha padrão de Administrador (Você pode alterar aqui se desejar)
 SENHA_ADMIN = "admin123"
 
 st.sidebar.title("📦 BUILD STOCK")
@@ -48,24 +47,47 @@ if not st.session_state.autenticado:
     else:
       st.sidebar.error("Senha incorreta!")
 
-  # Tela inicial bloqueada
   st.title("📦 BUILD STOCK - Controle de Almoxarifado")
   st.warning(
-      "⚠️ O sistema está protegido. Por favor, digite a senha de administrador"
-      " na barra lateral para acessar o aplicativo."
+      "⚠️ O sistema está protegido. Digite a senha de administrador na barra"
+      " lateral."
   )
   st.stop()
 
-# Se o usuário estiver autenticado, exibe o menu completo
 st.sidebar.success("✅ Sessão de Administrador Ativa")
 if st.sidebar.button("🔒 Sair / Bloquear"):
   st.session_state.autenticado = False
   st.rerun()
 
 st.sidebar.markdown("---")
+
+# -------------------------------------------------------------
+# DICIONÁRIO DE RÓTULOS (Customizáveis pelo Administrador)
+# -------------------------------------------------------------
+if "rotulos" not in st.session_state:
+  st.session_state.rotulos = {
+      "ID_Material": "ID do Material",
+      "Descricao": "Descrição",
+      "Marca": "Marca",
+      "Lote": "Lote",
+      "Unidade_Medida": "Unidade de Medida",
+      "Total1": "Total 1",
+      "Total2": "Total 2",
+      "Total3": "Total 3",
+      "Entradas": "Entradas",
+      "Saidas": "Saídas",
+  }
+
+r = st.session_state.rotulos
+
 menu = st.sidebar.radio(
     "Navegação:",
-    ["🗄️ Arquivo & Tabela de Gavetas", "📊 Dashboard", "⚙️ Gerenciar Gavetas"],
+    [
+        "🗄️ Arquivo & Tabela de Gavetas",
+        "📊 Dashboard",
+        "⚙️ Gerenciar Gavetas",
+        "✏️ Configurar Títulos / Rótulos",
+    ],
 )
 
 # Inicialização do Banco de Dados em Memória (Session State)
@@ -138,13 +160,74 @@ def calcular_curva_abc_serie(serie_totais):
 
 
 # -------------------------------------------------------------
-# 1. GERENCIAR GAVETAS (Criar, Editar Nomes e Excluir)
+# 1. CONFIGURAR TÍTULOS / RÓTULOS (NOVO)
 # -------------------------------------------------------------
-if menu == "⚙️ Gerenciar Gavetas":
+if menu == "✏️ Configurar Títulos / Rótulos":
+  st.header("✏️ Configuração de Títulos e Nomes de Campos")
+  st.markdown(
+      "Altere abaixo os títulos de qualquer campo do sistema conforme sua"
+      " preferência."
+  )
+
+  with st.form("form_config_titulos"):
+    c1, c2 = st.columns(2)
+    with c1:
+      novo_id = st.text_input(
+          "Título para 'ID do Material'", value=st.session_state.rotulos["ID_Material"]
+      )
+      novo_desc = st.text_input(
+          "Título para 'Descrição'", value=st.session_state.rotulos["Descricao"]
+      )
+      novo_marca = st.text_input(
+          "Título para 'Marca'", value=st.session_state.rotulos["Marca"]
+      )
+      novo_lote = st.text_input(
+          "Título para 'Lote'", value=st.session_state.rotulos["Lote"]
+      )
+      novo_unidade = st.text_input(
+          "Título para 'Unidade de Medida'",
+          value=st.session_state.rotulos["Unidade_Medida"],
+      )
+    with c2:
+      novo_t1 = st.text_input(
+          "Título para 'Total 1'", value=st.session_state.rotulos["Total1"]
+      )
+      novo_t2 = st.text_input(
+          "Título para 'Total 2'", value=st.session_state.rotulos["Total2"]
+      )
+      novo_t3 = st.text_input(
+          "Título para 'Total 3'", value=st.session_state.rotulos["Total3"]
+      )
+      novo_ent = st.text_input(
+          "Título para 'Entradas'", value=st.session_state.rotulos["Entradas"]
+      )
+      novo_sai = st.text_input(
+          "Título para 'Saídas'", value=st.session_state.rotulos["Saidas"]
+      )
+
+    btn_salvar_titulos = st.form_submit_button("💾 Salvar Novos Títulos")
+
+    if btn_salvar_titulos:
+      st.session_state.rotulos["ID_Material"] = novo_id
+      st.session_state.rotulos["Descricao"] = novo_desc
+      st.session_state.rotulos["Marca"] = novo_marca
+      st.session_state.rotulos["Lote"] = novo_lote
+      st.session_state.rotulos["Unidade_Medida"] = novo_unidade
+      st.session_state.rotulos["Total1"] = novo_t1
+      st.session_state.rotulos["Total2"] = novo_t2
+      st.session_state.rotulos["Total3"] = novo_t3
+      st.session_state.rotulos["Entradas"] = novo_ent
+      st.session_state.rotulos["Saidas"] = novo_sai
+      st.success("Títulos atualizados com sucesso em todo o sistema!")
+      st.rerun()
+
+# -------------------------------------------------------------
+# 2. GERENCIAR GAVETAS
+# -------------------------------------------------------------
+elif menu == "⚙️ Gerenciar Gavetas":
   st.header("⚙️ Gerenciamento e Edição de Gavetas")
   st.markdown("Crie, edite os nomes/locais ou remova compartimentos.")
 
-  # Criar Nova Gaveta
   with st.form("form_nova_gaveta"):
     st.subheader("➕ Criar Nova Gaveta")
     col1, col2 = st.columns(2)
@@ -175,8 +258,6 @@ if menu == "⚙️ Gerenciar Gavetas":
         st.warning("Preencha o Nome e o Local.")
 
   st.markdown("---")
-
-  # Editar Gaveta Existente
   st.subheader("✏️ Editar Nome ou Local de uma Gaveta")
   if not st.session_state.gavetas.empty:
     gaveta_editar = st.selectbox(
@@ -210,16 +291,13 @@ if menu == "⚙️ Gerenciar Gavetas":
         idx_g = st.session_state.gavetas[
             st.session_state.gavetas["Nome_Gaveta"] == gaveta_editar
         ].index[0]
-        # Atualiza também nas referências de materiais vinculados
         st.session_state.materiais_gaveta.loc[
             st.session_state.materiais_gaveta["Nome_Gaveta"] == gaveta_editar,
             "Nome_Gaveta",
         ] = novo_nome_gaveta
-
         st.session_state.gavetas.loc[idx_g, "Nome_Gaveta"] = novo_nome_gaveta
         st.session_state.gavetas.loc[idx_g, "Localizacao"] = nova_local_gaveta
         st.session_state.gavetas.loc[idx_g, "Status"] = novo_status
-
         st.success("Gaveta atualizada com sucesso!")
         st.rerun()
 
@@ -244,7 +322,7 @@ if menu == "⚙️ Gerenciar Gavetas":
     st.info("Nenhuma gaveta cadastrada.")
 
 # -------------------------------------------------------------
-# 2. ARQUIVO & TABELA DE GAVETAS
+# 3. ARQUIVO & TABELA DE GAVETAS
 # -------------------------------------------------------------
 elif menu == "🗄️ Arquivo & Tabela de Gavetas":
   st.header("🗄️ Tabela Interna de Materiais")
@@ -275,14 +353,14 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
     with st.form("form_adicionar_material"):
       c1, c2, c3 = st.columns(3)
       with c1:
-        id_material = st.text_input("🆔 ID do Material")
-        desc = st.text_input("Descrição")
+        id_material = st.text_input(f"🆔 {r['ID_Material']}")
+        desc = st.text_input(f"📝 {r['Descricao']}")
       with c2:
-        marca = st.text_input("Marca")
-        lote = st.text_input("Lote")
+        marca = st.text_input(f"🏷️ {r['Marca']}")
+        lote = st.text_input(f"📦 {r['Lote']}")
       with c3:
         unidade_medida = st.selectbox(
-            "📐 Unidade de Medida",
+            f"📐 {r['Unidade_Medida']}",
             [
                 "Unidades",
                 "M² (Metro Quadrado)",
@@ -299,15 +377,15 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
       st.markdown("### 🔢 Fatores de Multiplicação e Movimentação")
       col_t1, col_t2, col_t3, col_ent, col_sai = st.columns(5)
       with col_t1:
-        total1 = st.number_input("Total 1", value=1.0, min_value=0.0)
+        total1 = st.number_input(r["Total1"], value=1.0, min_value=0.0)
       with col_t2:
-        total2 = st.number_input("Total 2", value=1.0, min_value=0.0)
+        total2 = st.number_input(r["Total2"], value=1.0, min_value=0.0)
       with col_t3:
-        total3 = st.number_input("Total 3", value=1.0, min_value=0.0)
+        total3 = st.number_input(r["Total3"], value=1.0, min_value=0.0)
       with col_ent:
-        entradas = st.number_input("Entradas", value=0.0, min_value=0.0)
+        entradas = st.number_input(r["Entradas"], value=0.0, min_value=0.0)
       with col_sai:
-        saidas = st.number_input("Saídas", value=0.0, min_value=0.0)
+        saidas = st.number_input(r["Saidas"], value=0.0, min_value=0.0)
 
       btn_salvar = st.form_submit_button(
           "💾 Salvar Novo Material (IDs duplicados permitidos)"
@@ -339,7 +417,7 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           st.success("Material adicionado com sucesso!")
           st.rerun()
         else:
-          st.warning("O campo ID do Material é obrigatório.")
+          st.warning(f"O campo {r['ID_Material']} é obrigatório.")
 
     st.markdown("---")
     st.subheader(f"📊 Tabela de Estoque da Gaveta: {nome_gaveta_atual}")
@@ -379,19 +457,35 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
       df_tabela["Local de Armazenagem"] = dados_gaveta["Localizacao"]
       df_tabela["Indice_Original"] = df_tabela.index
 
+      # Renomeia as colunas do DataFrame com base nos rótulos customizados
+      rename_dict = {
+          "ID_Material": r["ID_Material"],
+          "Descricao": r["Descricao"],
+          "Marca": r["Marca"],
+          "Lote": r["Lote"],
+          "Unidade_Medida": r["Unidade_Medida"],
+          "Total1": r["Total1"],
+          "Total2": r["Total2"],
+          "Total3": r["Total3"],
+          "Entradas": r["Entradas"],
+          "Saidas": r["Saidas"],
+      }
+
+      df_exibicao = df_tabela.rename(columns=rename_dict)
+
       colunas_exibicao = [
           "Indice_Original",
-          "ID_Material",
-          "Descricao",
-          "Marca",
-          "Lote",
-          "Unidade_Medida",
-          "Total1",
-          "Total2",
-          "Total3",
+          r["ID_Material"],
+          r["Descricao"],
+          r["Marca"],
+          r["Lote"],
+          r["Unidade_Medida"],
+          r["Total1"],
+          r["Total2"],
+          r["Total3"],
           "Total em Estoque",
-          "Entradas",
-          "Saidas",
+          r["Entradas"],
+          r["Saidas"],
           "Saldo em Estoque",
           "Curva_ABC",
           "Data/Hora Registro",
@@ -399,15 +493,15 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           "Local de Armazenagem",
       ]
 
-      st.dataframe(df_tabela[colunas_exibicao], use_container_width=True)
+      st.dataframe(df_exibicao[colunas_exibicao], use_container_width=True)
 
       opcoes_linhas = {
-          f"Linha {idx}: ID [{row['ID_Material']}] - {row['Descricao']} (Marca: {row['Marca']})": idx
+          f"Linha {idx}: [{row['ID_Material']}] - {row['Descricao']} (Marca: {row['Marca']})": idx
           for idx, row in df_tabela.iterrows()
       }
 
       st.markdown("---")
-      st.subheader("✏️ Editar Material (Unidade, Multiplicação e Movimentação)")
+      st.subheader("✏️ Editar Material")
 
       if opcoes_linhas:
         escolha_edicao = st.selectbox(
@@ -437,12 +531,12 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
 
         with st.form("form_editar_material"):
           st.markdown(
-              f"Editando: **ID {item_atual['ID_Material']} - {item_atual['Descricao']}**"
+              f"Editando: **{r['ID_Material']} {item_atual['ID_Material']} - {item_atual['Descricao']}**"
           )
           c_u1, c_u2 = st.columns(2)
           with c_u1:
             nova_unidade = st.selectbox(
-                "📐 Unidade de Medida",
+                f"📐 {r['Unidade_Medida']}",
                 lista_unidades,
                 index=lista_unidades.index(unidade_atual_val),
             )
@@ -450,23 +544,23 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           c_e1, c_e2, c_e3, c_e4, c_e5 = st.columns(5)
           with c_e1:
             novo_t1 = st.number_input(
-                "Total 1", value=float(item_atual["Total1"]), min_value=0.0
+                r["Total1"], value=float(item_atual["Total1"]), min_value=0.0
             )
           with c_e2:
             novo_t2 = st.number_input(
-                "Total 2", value=float(item_atual["Total2"]), min_value=0.0
+                r["Total2"], value=float(item_atual["Total2"]), min_value=0.0
             )
           with c_e3:
             novo_t3 = st.number_input(
-                "Total 3", value=float(item_atual["Total3"]), min_value=0.0
+                r["Total3"], value=float(item_atual["Total3"]), min_value=0.0
             )
           with c_e4:
             nova_entrada = st.number_input(
-                "Entradas", value=float(item_atual["Entradas"]), min_value=0.0
+                r["Entradas"], value=float(item_atual["Entradas"]), min_value=0.0
             )
           with c_e5:
             nova_saida = st.number_input(
-                "Saídas", value=float(item_atual["Saidas"]), min_value=0.0
+                r["Saidas"], value=float(item_atual["Saidas"]), min_value=0.0
             )
 
           btn_atualizar = st.form_submit_button("🔄 Atualizar Este Registro")
@@ -518,7 +612,7 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
       st.info("Nenhum material cadastrado nesta gaveta ainda.")
 
 # -------------------------------------------------------------
-# 3. DASHBOARD GLOBAL
+# 4. DASHBOARD GLOBAL
 # -------------------------------------------------------------
 elif menu == "📊 Dashboard":
   st.header("📊 Dashboard Geral do Almoxarifado")
@@ -565,33 +659,47 @@ elif menu == "📊 Dashboard":
 
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-      st.markdown("#### Saldo em Estoque por Material")
+      st.markdown(f"#### Saldo em Estoque por {r['Descricao']}")
       df_chart_estoque = df_global.set_index("Descricao")["Saldo em Estoque"]
       st.bar_chart(df_chart_estoque)
 
     with col_g2:
-      st.markdown("#### Entradas vs Saídas Globais")
+      st.markdown(
+          f"#### {r['Entradas']} vs {r['Saidas']} (Movimentações Globais)"
+      )
       df_chart_mov = df_global.set_index("Descricao")[["Entradas", "Saidas"]]
       st.bar_chart(df_chart_mov)
 
     st.markdown("---")
     st.subheader("📋 Tabela Geral Consolidada")
+
+    rename_dict_dash = {
+        "ID_Material": r["ID_Material"],
+        "Descricao": r["Descricao"],
+        "Marca": r["Marca"],
+        "Lote": r["Lote"],
+        "Unidade_Medida": r["Unidade_Medida"],
+        "Entradas": r["Entradas"],
+        "Saidas": r["Saidas"],
+    }
+    df_global_exibicao = df_global.rename(columns=rename_dict_dash)
+
     colunas_dash = [
         "Nome_Gaveta",
-        "ID_Material",
-        "Descricao",
-        "Marca",
-        "Lote",
-        "Unidade_Medida",
+        r["ID_Material"],
+        r["Descricao"],
+        r["Marca"],
+        r["Lote"],
+        r["Unidade_Medida"],
         "Total em Estoque",
-        "Entradas",
-        "Saidas",
+        r["Entradas"],
+        r["Saidas"],
         "Saldo em Estoque",
         "Curva_ABC",
         "Data/Hora Registro",
         "Local de Armazenagem",
     ]
 
-    st.dataframe(df_global[colunas_dash], use_container_width=True)
+    st.dataframe(df_global_exibicao[colunas_dash], use_container_width=True)
   else:
     st.info("Nenhum dado registrado para exibir no dashboard.")
