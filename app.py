@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(layout="wide", page_title="Reforma de Fornos")
 
-# CSS da interface
+# CSS - INTERFACE GRAFICA
 st.markdown("""
 <style>
 .gaveta-principal {
@@ -29,47 +29,46 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# INICIO - GAVETA PRINCIPAL COM TEXTO DENTRO
 st.markdown('<div class="gaveta-principal">🔧 REFORMA DE FORNOS</div>', unsafe_allow_html=True)
 
-# Estado padrão das gavetas (igual ao que já roda no seu app)
+# PADRAO QUE JA RODA - MANTIDO
 if 'gavetas' not in st.session_state:
-    st.session_state.gavetas = {i: (i % 2 == 1) for i in range(1, 21)} # True=Liberada, False=Trancada
+    st.session_state.gavetas = {i: (i % 2 == 1) for i in range(1, 21)}
+if 'selecionada' not in st.session_state:
+    st.session_state.selecionada = 1
 
+total = len(st.session_state.gavetas)
 liberadas = sum(1 for v in st.session_state.gavetas.values() if v)
-trancadas = 20 - liberadas
+trancadas = total - liberadas
 
-st.markdown(f"### Gavetas (20) — Status: {liberadas} Liberadas • {trancadas} Trancadas")
+st.markdown(f"### Gavetas ({total}) — Status: {liberadas} Liberadas • {trancadas} Trancadas")
 st.caption("Gerencie o acesso às gavetas do forno. Liberadas podem ser abertas. Trancadas permanecem fechadas.")
 
-# GRID DE GAVETAS
+# GRID
 cols = st.columns(5)
-for i in range(1, 21):
+for i in sorted(st.session_state.gavetas.keys()):
     col = cols[(i-1) % 5]
     status = st.session_state.gavetas[i]
     with col:
-        cor = "LIBERADA" if status else "TRANCADA"
         classe = "liberada" if status else "trancada"
+        texto = "LIBERADA" if status else "TRANCADA"
         icone = "✅" if status else "🔒"
-        st.markdown(f"""
-        <div class="gaveta-card">
-            <b>{i:02d} — {'Liberada' if status else 'Trancada'}</b><br>
-            {icone} <span class="{classe}">{cor}</span>
-        </div>
-        """, unsafe_allow_html=True)
+        if st.button(f"{i:02d} - {texto}", key=f"g_{i}", use_container_width=True):
+            st.session_state.selecionada = i
+        st.markdown(f'<div style="text-align:center">{icone} <span class="{classe}">{texto}</span></div>', unsafe_allow_html=True)
 
 st.divider()
+st.write(f"Gaveta selecionada: **{st.session_state.selecionada:02d}**")
 
-# BOTOES NA PARTE INFERIOR - COMO VOCE PEDIU
+# BOTOES EMBAIXO
 c1, c2, c3, c4, c5 = st.columns(5)
-
 with c1:
     if st.button("🔓 Liberar", use_container_width=True, type="primary"):
-        st.session_state.gavetas[1] = True
+        st.session_state.gavetas[st.session_state.selecionada] = True
         st.rerun()
 with c2:
     if st.button("🔒 Trancar", use_container_width=True):
-        st.session_state.gavetas[1] = False
+        st.session_state.gavetas[st.session_state.selecionada] = False
         st.rerun()
 with c3:
     if st.button("✅ Liberar Todas", use_container_width=True):
@@ -83,4 +82,5 @@ with c5:
     if st.button("➕ Criar Nova Gaveta Automatico", use_container_width=True, type="primary"):
         novo_id = max(st.session_state.gavetas.keys()) + 1
         st.session_state.gavetas[novo_id] = True
+        st.session_state.selecionada = novo_id
         st.rerun()
