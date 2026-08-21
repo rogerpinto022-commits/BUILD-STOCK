@@ -18,32 +18,54 @@ st.markdown(
         color: #3b2716 !important;
         font-family: 'Georgia', serif;
     }
-    .gaveta-card {
-        background: linear-gradient(135deg, #5c3a21 0%, #3b2716 100%);
-        border: 2px solid #2d7a57;
-        border-radius: 12px;
-        padding: 20px;
-        color: #ffffff;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        margin-bottom: 20px;
-    }
-    .gaveta-card h3 {
-        color: #e6c887 !important;
-        margin-top: 0;
-    }
-    .badge-local {
-        background-color: #2d7a57;
-        color: #ffffff;
-        padding: 5px 12px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        font-weight: bold;
-        display: inline-block;
-        margin-top: 8px;
-    }
     </style>
 """,
     unsafe_allow_html=True,
+)
+
+# -------------------------------------------------------------
+# CONTROLE DE ACESSO / LOGIN DE ADMINISTRADOR
+# -------------------------------------------------------------
+if "autenticado" not in st.session_state:
+  st.session_state.autenticado = False
+
+# Senha padrão de Administrador (Você pode alterar aqui se desejar)
+SENHA_ADMIN = "admin123"
+
+st.sidebar.title("📦 BUILD STOCK")
+st.sidebar.markdown("---")
+
+if not st.session_state.autenticado:
+  st.sidebar.subheader("🔒 Acesso Restrito")
+  senha_digitada = st.sidebar.text_input(
+      "Digite a Senha do Administrador:", type="password"
+  )
+  if st.sidebar.button("🔓 Entrar"):
+    if senha_digitada == SENHA_ADMIN:
+      st.session_state.autenticado = True
+      st.sidebar.success("Acesso liberado!")
+      st.rerun()
+    else:
+      st.sidebar.error("Senha incorreta!")
+
+  # Tela inicial bloqueada
+  st.title("📦 BUILD STOCK - Controle de Almoxarifado")
+  st.warning(
+      "⚠️ O sistema está protegido. Por favor, digite a senha de administrador"
+      " na barra lateral para acessar o aplicativo."
+  )
+  st.stop()
+
+# Se o usuário estiver autenticado, exibe o menu completo
+st.sidebar.success("✅ Sessão de Administrador Ativa")
+if st.sidebar.button("🔒 Sair / Bloquear"):
+  st.session_state.autenticado = False
+  st.rerun()
+
+st.sidebar.markdown("---")
+menu = st.sidebar.radio(
+    "Navegação:",
+    ["🗄️ Arquivo & Tabela de Gavetas", "📊 Dashboard", "⚙️ Gerenciar Gavetas"],
 )
 
 # Inicialização do Banco de Dados em Memória (Session State)
@@ -66,13 +88,13 @@ if "materiais_gaveta" not in st.session_state:
           "Descricao",
           "Marca",
           "Lote",
+          "Unidade_Medida",
           "Total1",
           "Total2",
           "Total3",
           "Entradas",
           "Saidas",
           "Data_Hora_Movimentacao",
-          "Curva_ABC",
       ]
   )
   st.session_state.materiais_gaveta.loc[0] = [
@@ -81,43 +103,59 @@ if "materiais_gaveta" not in st.session_state:
       "Cimento Especial",
       "Alpha",
       "LOTE-99",
+      "Unidades",
       2.0,
       5.0,
       10.0,
       100.0,
       20.0,
       datetime.now(),
-      "A",
   ]
 
-# Menu Lateral Estilizado
-st.sidebar.title("📦 BUILD STOCK")
-st.sidebar.markdown("---")
-st.sidebar.markdown("Sistema de Arquivo & Rastreio")
-menu = st.sidebar.radio(
-    "Navegação:",
-    ["🗄️ Arquivo & Tabela de Gavetas", "📊 Dashboard", "⚙️ Gerenciar Gavetas"],
-)
+
+def calcular_curva_abc_serie(serie_totais):
+  if serie_totais.empty or serie_totais.sum() == 0:
+    return ["C"] * len(serie_totais)
+
+  df_temp = pd.DataFrame({"valor": serie_totais})
+  df_temp = df_temp.sort_values(by="valor", ascending=False)
+  total_geral = df_temp["valor"].sum()
+
+  acumulado = 0
+  curvas = []
+  for val in df_temp["valor"]:
+    acumulado += val
+    perc = (acumulado / total_geral) * 100 if total_geral > 0 else 0
+    if perc <= 70:
+      curvas.append("A (Alto Impacto)")
+    elif perc <= 90:
+      curvas.append("B (Médio Impacto)")
+    else:
+      curvas.append("C (Baixo Impacto)")
+
+  df_temp["Curva"] = curvas
+  return df_temp.loc[serie_totais.index, "Curva"]
+
 
 # -------------------------------------------------------------
-# 1. GERENCIAR GAVETAS (Criar e Excluir)
+# 1. GERENCIAR GAVETAS (Criar, Editar Nomes e Excluir)
 # -------------------------------------------------------------
 if menu == "⚙️ Gerenciar Gavetas":
-  st.header("⚙️ Gerenciamento de Gavetas / Arquivos")
-  st.markdown("Crie novas gavetas ou remova compartimentos existentes.")
+  st.header("⚙️ Gerenciamento e Edição de Gavetas")
+  st.markdown("Crie, edite os nomes/locais ou remova compartimentos.")
 
+  # Criar Nova Gaveta
   with st.form("form_nova_gaveta"):
+    st.subheader("➕ Criar Nova Gaveta")
     col1, col2 = st.columns(2)
     with col1:
-      nome_gaveta = st.text_input("🏷️ Nome da Gaveta (Ex: Ferramentas)")
+      nome_gaveta = st.text_input("🏷️ Nome da Gaveta")
     with col2:
-      localizacao = st.text_input(
-          "📍 Local de Armazenagem (Ex: Galpão B, Estante 3)"
-      )
+      localizacao = st.text_input("📍 Local de Armazenagem")
 
     status = st.selectbox("Status", ["Ativa", "Manutenção", "Inativa"])
     descricao_gaveta = st.text_area("Observações")
-    submitted = st.form_submit_button("💾 Criar Nova Gaveta")
+    submitted = st.form_submit_button("💾 Criar Gaveta")
 
     if submitted:
       if nome_gaveta and localizacao:
@@ -134,14 +172,64 @@ if menu == "⚙️ Gerenciar Gavetas":
           st.success(f"Gaveta '{nome_gaveta}' criada com sucesso!")
           st.rerun()
       else:
-        st.warning("Preencha o Nome e o Local de Armazenagem.")
+        st.warning("Preencha o Nome e o Local.")
 
   st.markdown("---")
-  st.subheader("🗑️ Excluir Gaveta Existente")
+
+  # Editar Gaveta Existente
+  st.subheader("✏️ Editar Nome ou Local de uma Gaveta")
+  if not st.session_state.gavetas.empty:
+    gaveta_editar = st.selectbox(
+        "Selecione a gaveta para editar:",
+        st.session_state.gavetas["Nome_Gaveta"].tolist(),
+    )
+    dados_atual_g = st.session_state.gavetas[
+        st.session_state.gavetas["Nome_Gaveta"] == gaveta_editar
+    ].iloc[0]
+
+    with st.form("form_editar_gaveta"):
+      novo_nome_gaveta = st.text_input(
+          "Novo Nome da Gaveta", value=dados_atual_g["Nome_Gaveta"]
+      )
+      nova_local_gaveta = st.text_input(
+          "Nova Localização", value=dados_atual_g["Localizacao"]
+      )
+      novo_status = st.selectbox(
+          "Status",
+          ["Ativa", "Manutenção", "Inativa"],
+          index=["Ativa", "Manutenção", "Inativa"].index(
+              dados_atual_g["Status"]
+              if dados_atual_g["Status"]
+              in ["Ativa", "Manutenção", "Inativa"]
+              else "Ativa"
+          ),
+      )
+      btn_salvar_g = st.form_submit_button("🔄 Atualizar Gaveta")
+
+      if btn_salvar_g:
+        idx_g = st.session_state.gavetas[
+            st.session_state.gavetas["Nome_Gaveta"] == gaveta_editar
+        ].index[0]
+        # Atualiza também nas referências de materiais vinculados
+        st.session_state.materiais_gaveta.loc[
+            st.session_state.materiais_gaveta["Nome_Gaveta"] == gaveta_editar,
+            "Nome_Gaveta",
+        ] = novo_nome_gaveta
+
+        st.session_state.gavetas.loc[idx_g, "Nome_Gaveta"] = novo_nome_gaveta
+        st.session_state.gavetas.loc[idx_g, "Localizacao"] = nova_local_gaveta
+        st.session_state.gavetas.loc[idx_g, "Status"] = novo_status
+
+        st.success("Gaveta atualizada com sucesso!")
+        st.rerun()
+
+  st.markdown("---")
+  st.subheader("🗑️ Excluir Gaveta")
   if not st.session_state.gavetas.empty:
     gaveta_para_excluir = st.selectbox(
         "Selecione a gaveta para remover:",
         st.session_state.gavetas["Nome_Gaveta"].tolist(),
+        key="del_gaveta",
     )
     if st.button("❌ Excluir Gaveta Selecionada"):
       st.session_state.gavetas = st.session_state.gavetas[
@@ -156,19 +244,15 @@ if menu == "⚙️ Gerenciar Gavetas":
     st.info("Nenhuma gaveta cadastrada.")
 
 # -------------------------------------------------------------
-# 2. ARQUIVO & TABELA DE GAVETAS (Gestão Interna de Cada Gaveta)
+# 2. ARQUIVO & TABELA DE GAVETAS
 # -------------------------------------------------------------
 elif menu == "🗄️ Arquivo & Tabela de Gavetas":
-  st.header("🗄️ Arquivo de Gavetas - Tabela Interna de Materiais")
-  st.markdown(
-      "Selecione uma gaveta para gerenciar os itens e visualizar todos os"
-      " cálculos."
-  )
+  st.header("🗄️ Tabela Interna de Materiais")
+  st.markdown("Gerencie os itens da gaveta selecionada.")
 
   if st.session_state.gavetas.empty:
     st.warning("Cadastre pelo menos uma gaveta na aba 'Gerenciar Gavetas'.")
   else:
-    # Seletor de Gaveta
     gavetas_opcoes = st.session_state.gavetas.apply(
         lambda x: f"{x['Nome_Gaveta']} (📍 Local: {x['Localizacao']})", axis=1
     ).tolist()
@@ -177,17 +261,16 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
     )
     nome_gaveta_atual = gaveta_selecionada_str.split(" (📍 Local:")[0]
 
-    # Dados da gaveta ativa
     dados_gaveta = st.session_state.gavetas[
         st.session_state.gavetas["Nome_Gaveta"] == nome_gaveta_atual
     ].iloc[0]
     st.info(
-        f"**Gaveta Ativa:** {nome_gaveta_atual} | **Local de Armazenagem:** 📍"
+        f"**Gaveta Ativa:** {nome_gaveta_atual} | **Local:** 📍"
         f" {dados_gaveta['Localizacao']}"
     )
 
     st.markdown("---")
-    st.subheader(f"➕ Adicionar Material na Tabela da Gaveta")
+    st.subheader("➕ Adicionar Material na Tabela da Gaveta")
 
     with st.form("form_adicionar_material"):
       c1, c2, c3 = st.columns(3)
@@ -198,7 +281,20 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
         marca = st.text_input("Marca")
         lote = st.text_input("Lote")
       with c3:
-        curva_abc = st.selectbox("Curva ABC", ["A", "B", "C"])
+        unidade_medida = st.selectbox(
+            "📐 Unidade de Medida",
+            [
+                "Unidades",
+                "M² (Metro Quadrado)",
+                "M (Metros Lineares)",
+                "Kilos (kg)",
+                "Peças",
+                "Rolos",
+                "Caixas",
+                "Litros",
+                "Sacos",
+            ],
+        )
 
       st.markdown("### 🔢 Fatores de Multiplicação e Movimentação")
       col_t1, col_t2, col_t3, col_ent, col_sai = st.columns(5)
@@ -219,7 +315,6 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
 
       if btn_salvar:
         if id_material:
-          # Permite IDs repetidos sem restrição alguma
           data_hora_atual = datetime.now()
           novo_item = pd.DataFrame(
               [[
@@ -228,13 +323,13 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
                   desc,
                   marca,
                   lote,
+                  unidade_medida,
                   total1,
                   total2,
                   total3,
                   entradas,
                   saidas,
                   data_hora_atual,
-                  curva_abc,
               ]],
               columns=st.session_state.materiais_gaveta.columns,
           )
@@ -249,13 +344,11 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
     st.markdown("---")
     st.subheader(f"📊 Tabela de Estoque da Gaveta: {nome_gaveta_atual}")
 
-    # Filtra os materiais da gaveta selecionada mantendo o índice original para referência
     df_tabela = st.session_state.materiais_gaveta[
         st.session_state.materiais_gaveta["Nome_Gaveta"] == nome_gaveta_atual
     ].copy()
 
     if not df_tabela.empty:
-      # Cálculos
       df_tabela["Total em Estoque"] = (
           df_tabela["Total1"] * df_tabela["Total2"] * df_tabela["Total3"]
       )
@@ -263,6 +356,9 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           df_tabela["Total em Estoque"]
           + df_tabela["Entradas"]
           - df_tabela["Saidas"]
+      )
+      df_tabela["Curva_ABC"] = calcular_curva_abc_serie(
+          df_tabela["Total em Estoque"]
       )
 
       agora = pd.to_datetime(datetime.now())
@@ -281,8 +377,6 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           "Data_Hora_Movimentacao"
       ].dt.strftime("%d/%m/%Y %H:%M:%S")
       df_tabela["Local de Armazenagem"] = dados_gaveta["Localizacao"]
-
-      # Mantemos o índice visível/mapeado para permitir seleção sem conflito de IDs repetidos
       df_tabela["Indice_Original"] = df_tabela.index
 
       colunas_exibicao = [
@@ -291,6 +385,7 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
           "Descricao",
           "Marca",
           "Lote",
+          "Unidade_Medida",
           "Total1",
           "Total2",
           "Total3",
@@ -306,19 +401,13 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
 
       st.dataframe(df_tabela[colunas_exibicao], use_container_width=True)
 
-      # Opções baseadas no índice exato da linha para evitar travar com IDs repetidos
       opcoes_linhas = {
           f"Linha {idx}: ID [{row['ID_Material']}] - {row['Descricao']} (Marca: {row['Marca']})": idx
           for idx, row in df_tabela.iterrows()
       }
 
-      # -------------------------------------------------------------
-      # EDITAR REGISTRO EXISTENTE POR LINHA EXATA
-      # -------------------------------------------------------------
       st.markdown("---")
-      st.subheader(
-          "✏️ Editar Multiplicação e Movimentação (Por Item Específico)"
-      )
+      st.subheader("✏️ Editar Material (Unidade, Multiplicação e Movimentação)")
 
       if opcoes_linhas:
         escolha_edicao = st.selectbox(
@@ -329,10 +418,35 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
         idx_selecionado = opcoes_linhas[escolha_edicao]
         item_atual = st.session_state.materiais_gaveta.loc[idx_selecionado]
 
+        lista_unidades = [
+            "Unidades",
+            "M² (Metro Quadrado)",
+            "M (Metros Lineares)",
+            "Kilos (kg)",
+            "Peças",
+            "Rolos",
+            "Caixas",
+            "Litros",
+            "Sacos",
+        ]
+        unidade_atual_val = (
+            item_atual["Unidade_Medida"]
+            if item_atual["Unidade_Medida"] in lista_unidades
+            else "Unidades"
+        )
+
         with st.form("form_editar_material"):
           st.markdown(
-              f"Editando: **ID {item_atual['ID_Material']} - {item_atual['Descricao']}** (Marca: {item_atual['Marca']})"
+              f"Editando: **ID {item_atual['ID_Material']} - {item_atual['Descricao']}**"
           )
+          c_u1, c_u2 = st.columns(2)
+          with c_u1:
+            nova_unidade = st.selectbox(
+                "📐 Unidade de Medida",
+                lista_unidades,
+                index=lista_unidades.index(unidade_atual_val),
+            )
+
           c_e1, c_e2, c_e3, c_e4, c_e5 = st.columns(5)
           with c_e1:
             novo_t1 = st.number_input(
@@ -355,11 +469,12 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
                 "Saídas", value=float(item_atual["Saidas"]), min_value=0.0
             )
 
-          btn_atualizar = st.form_submit_button(
-              "🔄 Atualizar Este Registro (Atualiza Data/Hora)"
-          )
+          btn_atualizar = st.form_submit_button("🔄 Atualizar Este Registro")
 
           if btn_atualizar:
+            st.session_state.materiais_gaveta.loc[
+                idx_selecionado, "Unidade_Medida"
+            ] = nova_unidade
             st.session_state.materiais_gaveta.loc[idx_selecionado, "Total1"] = (
                 novo_t1
             )
@@ -379,14 +494,9 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
                 idx_selecionado, "Data_Hora_Movimentacao"
             ] = datetime.now()
 
-            st.success(
-                "Registro atualizado com sucesso (Nova data/hora registrada)!"
-            )
+            st.success("Registro atualizado com sucesso!")
             st.rerun()
 
-      # -------------------------------------------------------------
-      # EXCLUIR REGISTRO POR LINHA EXATA
-      # -------------------------------------------------------------
       st.markdown("---")
       st.subheader("🗑️ Excluir Registro Específico da Tabela")
 
@@ -412,7 +522,7 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
 # -------------------------------------------------------------
 elif menu == "📊 Dashboard":
   st.header("📊 Dashboard Geral do Almoxarifado")
-  st.markdown("Visão consolidada de todos os materiais e locais.")
+  st.markdown("Visão consolidada e gráficos analíticos.")
 
   if not st.session_state.materiais_gaveta.empty:
     df_global = st.session_state.materiais_gaveta.copy()
@@ -423,6 +533,9 @@ elif menu == "📊 Dashboard":
         df_global["Total em Estoque"]
         + df_global["Entradas"]
         - df_global["Saidas"]
+    )
+    df_global["Curva_ABC"] = calcular_curva_abc_serie(
+        df_global["Total em Estoque"]
     )
 
     df_global["Data/Hora Registro"] = pd.to_datetime(
@@ -439,12 +552,37 @@ elif menu == "📊 Dashboard":
         columns={"Localizacao": "Local de Armazenagem"}, inplace=True
     )
 
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+      st.metric("Total de Registros/Itens", len(df_global))
+    with col_m2:
+      st.metric("Volume Geral em Estoque", f"{df_global['Saldo em Estoque'].sum():,.2f}")
+    with col_m3:
+      st.metric("Gavetas Ativas", len(st.session_state.gavetas))
+
+    st.markdown("---")
+    st.subheader("📈 Gráficos Analíticos")
+
+    col_g1, col_g2 = st.columns(2)
+    with col_g1:
+      st.markdown("#### Saldo em Estoque por Material")
+      df_chart_estoque = df_global.set_index("Descricao")["Saldo em Estoque"]
+      st.bar_chart(df_chart_estoque)
+
+    with col_g2:
+      st.markdown("#### Entradas vs Saídas Globais")
+      df_chart_mov = df_global.set_index("Descricao")[["Entradas", "Saidas"]]
+      st.bar_chart(df_chart_mov)
+
+    st.markdown("---")
+    st.subheader("📋 Tabela Geral Consolidada")
     colunas_dash = [
         "Nome_Gaveta",
         "ID_Material",
         "Descricao",
         "Marca",
         "Lote",
+        "Unidade_Medida",
         "Total em Estoque",
         "Entradas",
         "Saidas",
