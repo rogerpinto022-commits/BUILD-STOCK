@@ -213,58 +213,43 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
       with col_sai:
         saidas = st.number_input("Saídas", value=0.0, min_value=0.0)
 
-      btn_salvar = st.form_submit_button("💾 Salvar Novo Material")
+      btn_salvar = st.form_submit_button(
+          "💾 Salvar Novo Material (IDs duplicados permitidos)"
+      )
 
       if btn_salvar:
         if id_material:
-          # Verifica se o ID já existe nesta gaveta
-          existe = not st.session_state.materiais_gaveta[
-              (
-                  st.session_state.materiais_gaveta["Nome_Gaveta"]
-                  == nome_gaveta_atual
-              )
-              & (
-                  st.session_state.materiais_gaveta["ID_Material"]
-                  == id_material
-              )
-          ].empty
-
-          if existe:
-            st.error(
-                f"O ID '{id_material}' já existe nesta gaveta! Use a opção de"
-                " edição abaixo para alterá-lo."
-            )
-          else:
-            data_hora_atual = datetime.now()
-            novo_item = pd.DataFrame(
-                [[
-                    nome_gaveta_atual,
-                    id_material,
-                    desc,
-                    marca,
-                    lote,
-                    total1,
-                    total2,
-                    total3,
-                    entradas,
-                    saidas,
-                    data_hora_atual,
-                    curva_abc,
-                ]],
-                columns=st.session_state.materiais_gaveta.columns,
-            )
-            st.session_state.materiais_gaveta = pd.concat(
-                [st.session_state.materiais_gaveta, novo_item], ignore_index=True
-            )
-            st.success("Material adicionado com sucesso!")
-            st.rerun()
+          # Permite IDs repetidos sem restrição alguma
+          data_hora_atual = datetime.now()
+          novo_item = pd.DataFrame(
+              [[
+                  nome_gaveta_atual,
+                  id_material,
+                  desc,
+                  marca,
+                  lote,
+                  total1,
+                  total2,
+                  total3,
+                  entradas,
+                  saidas,
+                  data_hora_atual,
+                  curva_abc,
+              ]],
+              columns=st.session_state.materiais_gaveta.columns,
+          )
+          st.session_state.materiais_gaveta = pd.concat(
+              [st.session_state.materiais_gaveta, novo_item], ignore_index=True
+          )
+          st.success("Material adicionado com sucesso!")
+          st.rerun()
         else:
           st.warning("O campo ID do Material é obrigatório.")
 
     st.markdown("---")
     st.subheader(f"📊 Tabela de Estoque da Gaveta: {nome_gaveta_atual}")
 
-    # Filtra os materiais da gaveta selecionada
+    # Filtra os materiais da gaveta selecionada mantendo o índice original para referência
     df_tabela = st.session_state.materiais_gaveta[
         st.session_state.materiais_gaveta["Nome_Gaveta"] == nome_gaveta_atual
     ].copy()
@@ -297,7 +282,11 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
       ].dt.strftime("%d/%m/%Y %H:%M:%S")
       df_tabela["Local de Armazenagem"] = dados_gaveta["Localizacao"]
 
+      # Mantemos o índice visível/mapeado para permitir seleção sem conflito de IDs repetidos
+      df_tabela["Indice_Original"] = df_tabela.index
+
       colunas_exibicao = [
+          "Indice_Original",
           "ID_Material",
           "Descricao",
           "Marca",
@@ -317,107 +306,102 @@ elif menu == "🗄️ Arquivo & Tabela de Gavetas":
 
       st.dataframe(df_tabela[colunas_exibicao], use_container_width=True)
 
+      # Opções baseadas no índice exato da linha para evitar travar com IDs repetidos
+      opcoes_linhas = {
+          f"Linha {idx}: ID [{row['ID_Material']}] - {row['Descricao']} (Marca: {row['Marca']})": idx
+          for idx, row in df_tabela.iterrows()
+      }
+
       # -------------------------------------------------------------
-      # EDITAR REGISTRO EXISTENTE (Novos campos de multiplicação e movimentação)
+      # EDITAR REGISTRO EXISTENTE POR LINHA EXATA
       # -------------------------------------------------------------
       st.markdown("---")
-      st.subheader("✏️ Editar Multiplicação e Movimentação de um Material")
-      id_para_editar = st.selectbox(
-          "Selecione o ID do Material para editar:",
-          df_tabela["ID_Material"].tolist(),
-          key="select_editar",
+      st.subheader(
+          "✏️ Editar Multiplicação e Movimentação (Por Item Específico)"
       )
 
-      # Pega os dados atuais do item selecionado
-      item_atual = df_tabela[df_tabela["ID_Material"] == id_para_editar].iloc[0]
-
-      with st.form("form_editar_material"):
-        st.markdown(
-            f"Editando item: **{id_para_editar} - {item_atual['Descricao']}**"
+      if opcoes_linhas:
+        escolha_edicao = st.selectbox(
+            "Selecione exatamente qual linha deseja editar:",
+            list(opcoes_linhas.keys()),
+            key="select_editar_linha",
         )
-        c_e1, c_e2, c_e3, c_e4, c_e5 = st.columns(5)
-        with c_e1:
-          novo_t1 = st.number_input(
-              "Total 1", value=float(item_atual["Total1"]), min_value=0.0
+        idx_selecionado = opcoes_linhas[escolha_edicao]
+        item_atual = st.session_state.materiais_gaveta.loc[idx_selecionado]
+
+        with st.form("form_editar_material"):
+          st.markdown(
+              f"Editando: **ID {item_atual['ID_Material']} - {item_atual['Descricao']}** (Marca: {item_atual['Marca']})"
           )
-        with c_e2:
-          novo_t2 = st.number_input(
-              "Total 2", value=float(item_atual["Total2"]), min_value=0.0
-          )
-        with c_e3:
-          novo_t3 = st.number_input(
-              "Total 3", value=float(item_atual["Total3"]), min_value=0.0
-          )
-        with c_e4:
-          nova_entrada = st.number_input(
-              "Entradas", value=float(item_atual["Entradas"]), min_value=0.0
-          )
-        with c_e5:
-          nova_saida = st.number_input(
-              "Saídas", value=float(item_atual["Saidas"]), min_value=0.0
+          c_e1, c_e2, c_e3, c_e4, c_e5 = st.columns(5)
+          with c_e1:
+            novo_t1 = st.number_input(
+                "Total 1", value=float(item_atual["Total1"]), min_value=0.0
+            )
+          with c_e2:
+            novo_t2 = st.number_input(
+                "Total 2", value=float(item_atual["Total2"]), min_value=0.0
+            )
+          with c_e3:
+            novo_t3 = st.number_input(
+                "Total 3", value=float(item_atual["Total3"]), min_value=0.0
+            )
+          with c_e4:
+            nova_entrada = st.number_input(
+                "Entradas", value=float(item_atual["Entradas"]), min_value=0.0
+            )
+          with c_e5:
+            nova_saida = st.number_input(
+                "Saídas", value=float(item_atual["Saidas"]), min_value=0.0
+            )
+
+          btn_atualizar = st.form_submit_button(
+              "🔄 Atualizar Este Registro (Atualiza Data/Hora)"
           )
 
-        btn_atualizar = st.form_submit_button(
-            "🔄 Atualizar Material (Atualiza Data/Hora)"
-        )
+          if btn_atualizar:
+            st.session_state.materiais_gaveta.loc[idx_selecionado, "Total1"] = (
+                novo_t1
+            )
+            st.session_state.materiais_gaveta.loc[idx_selecionado, "Total2"] = (
+                novo_t2
+            )
+            st.session_state.materiais_gaveta.loc[idx_selecionado, "Total3"] = (
+                novo_t3
+            )
+            st.session_state.materiais_gaveta.loc[
+                idx_selecionado, "Entradas"
+            ] = nova_entrada
+            st.session_state.materiais_gaveta.loc[idx_selecionado, "Saidas"] = (
+                nova_saida
+            )
+            st.session_state.materiais_gaveta.loc[
+                idx_selecionado, "Data_Hora_Movimentacao"
+            ] = datetime.now()
 
-        if btn_atualizar:
-          # Atualiza os valores na base global (session_state)
-          idx_global = st.session_state.materiais_gaveta[
-              (
-                  st.session_state.materiais_gaveta["Nome_Gaveta"]
-                  == nome_gaveta_atual
-              )
-              & (
-                  st.session_state.materiais_gaveta["ID_Material"]
-                  == id_para_editar
-              )
-          ].index
-
-          st.session_state.materiais_gaveta.loc[idx_global, "Total1"] = novo_t1
-          st.session_state.materiais_gaveta.loc[idx_global, "Total2"] = novo_t2
-          st.session_state.materiais_gaveta.loc[idx_global, "Total3"] = novo_t3
-          st.session_state.materiais_gaveta.loc[idx_global, "Entradas"] = (
-              nova_entrada
-          )
-          st.session_state.materiais_gaveta.loc[idx_global, "Saidas"] = (
-              nova_saida
-          )
-          # Atualiza também a data/hora da última alteração de movimentação
-          st.session_state.materiais_gaveta.loc[
-              idx_global, "Data_Hora_Movimentacao"
-          ] = datetime.now()
-
-          st.success(
-              f"Material '{id_para_editar}' atualizado com sucesso (Nova"
-              " data/hora registrada)!"
-          )
-          st.rerun()
+            st.success(
+                "Registro atualizado com sucesso (Nova data/hora registrada)!"
+            )
+            st.rerun()
 
       # -------------------------------------------------------------
-      # EXCLUIR REGISTRO
+      # EXCLUIR REGISTRO POR LINHA EXATA
       # -------------------------------------------------------------
       st.markdown("---")
       st.subheader("🗑️ Excluir Registro Específico da Tabela")
-      id_para_excluir = st.selectbox(
-          "Selecione o ID do Material para excluir:",
-          df_tabela["ID_Material"].tolist(),
-          key="select_excluir",
+
+      escolha_exclusao = st.selectbox(
+          "Selecione exatamente qual linha deseja excluir:",
+          list(opcoes_linhas.keys()),
+          key="select_excluir_linha",
       )
-      if st.button("❌ Excluir Registro"):
-        st.session_state.materiais_gaveta = st.session_state.materiais_gaveta[
-            ~(
-                (
-                    st.session_state.materiais_gaveta["Nome_Gaveta"]
-                    == nome_gaveta_atual
-                )
-                & (
-                    st.session_state.materiais_gaveta["ID_Material"]
-                    == id_para_excluir
-                )
-            )
-        ]
-        st.success(f"Registro '{id_para_excluir}' excluído com sucesso!")
+      idx_excluir = opcoes_linhas[escolha_exclusao]
+
+      if st.button("❌ Excluir Este Registro"):
+        st.session_state.materiais_gaveta = (
+            st.session_state.materiais_gaveta.drop(idx_excluir)
+        )
+        st.success("Registro excluído com sucesso!")
         st.rerun()
 
     else:
