@@ -283,7 +283,7 @@ elif menu == "🗄️ Armário (Gavetas Visuais)":
           f" **Descrição:** {dados_gaveta['Descricao']}"
       )
 
-      # Formulário de Cadastro isolado em um Expander (para não poluir a abertura da gaveta)
+      # ➕ Adicionar Novo Lançamento de Material (Incluindo UNIDADES)
       with st.expander("➕ Adicionar Novo Lançamento de Material"):
         with st.form("form_novo_registro"):
           id_mat = st.text_input("ID", value="1")
@@ -303,7 +303,8 @@ elif menu == "🗄️ Armário (Gavetas Visuais)":
               min_value=0.0,
           )
           unidade_medida = st.selectbox(
-              "UNIDADE DE MEDIDA", ["KG", "TON", "SACOS", "LITROS", "M²"]
+              "UNIDADE DE MEDIDA",
+              ["KG", "TON", "SACOS", "UNIDADES", "LITROS", "M²"],
           )
           local_armazenagem = st.text_input(
               "LOCAL DE ARMAZENAGEM", value=dados_gaveta["Localizacao"]
@@ -336,8 +337,17 @@ elif menu == "🗄️ Armário (Gavetas Visuais)":
                       local_armazenagem,
                       data_hora_atual,
                   ]],
-                  columns=st.session_state.materiais_gaveta.columns,
+                  columns=[
+                      c
+                      for c in st.session_state.materiais_gaveta.columns
+                      if c in st.session_state.materiais_gaveta.columns
+                  ],
               )
+
+              # Assegurar colunas dinâmicas extras se houver
+              for col in st.session_state.materiais_gaveta.columns:
+                if col not in novo_item.columns:
+                  novo_item[col] = ""
 
               st.session_state.materiais_gaveta = pd.concat(
                   [st.session_state.materiais_gaveta, novo_item],
@@ -347,6 +357,25 @@ elif menu == "🗄️ Armário (Gavetas Visuais)":
               st.rerun()
             else:
               st.warning("O campo ID é obrigatório.")
+
+      # 🛠️ Criar Nova Coluna Customizada na Tabela
+      with st.expander("🛠️ Criar Nova Coluna / Campo Personalizado"):
+        with st.form("form_nova_coluna"):
+          nome_nova_coluna = st.text_input(
+              "Nome da Nova Coluna (Ex: OBSERVAÇÃO, FORNECEDOR)"
+          )
+          btn_criar_col = st.form_submit_button("➕ Adicionar Coluna à Tabela")
+          if btn_criar_col:
+            if nome_nova_coluna.strip():
+              col_upper = nome_nova_coluna.strip().upper()
+              if col_upper in st.session_state.materiais_gaveta.columns:
+                st.warning("Esta coluna já existe!")
+              else:
+                st.session_state.materiais_gaveta[col_upper] = ""
+                st.success(f"Coluna '{col_upper}' criada com sucesso!")
+                st.rerun()
+            else:
+              st.error("Digite um nome válido para a coluna.")
 
       st.markdown("---")
       st.subheader(
@@ -370,19 +399,9 @@ elif menu == "🗄️ Armário (Gavetas Visuais)":
               df_gaveta["UNIDADE DE MEDIDA"].isin(filtro_unidade)
           ]
 
+        # Pega todas as colunas atuais do DataFrame para exibição (inclusive as criadas pelo usuário)
         colunas_exibicao = [
-            "ID",
-            "DESCRIÇÃO",
-            "MARCA",
-            "LOTE",
-            "VALIDADE",
-            "QTD/PALETE",
-            "ENTRADA",
-            "PESO UNITÁRIO",
-            "TOTAL",
-            "UNIDADE DE MEDIDA",
-            "LOCAL DE ARMAZENAGEM",
-            "DATA HORA",
+            c for c in st.session_state.materiais_gaveta.columns if c != "Nome_Gaveta"
         ]
 
         df_editavel = df_gaveta[colunas_exibicao]
@@ -393,11 +412,12 @@ elif menu == "🗄️ Armário (Gavetas Visuais)":
 
         if st.button("💾 Salvar Alterações na Tabela"):
           df_atualizado_base = df_resultado_editado.copy()
-          df_atualizado_base["TOTAL"] = (
-              df_atualizado_base["QTD/PALETE"]
-              * df_atualizado_base["ENTRADA"]
-              * df_atualizado_base["PESO UNITÁRIO"]
-          )
+          if "QTD/PALETE" in df_atualizado_base.columns and "ENTRADA" in df_atualizado_base.columns and "PESO UNITÁRIO" in df_atualizado_base.columns and "TOTAL" in df_atualizado_base.columns:
+            df_atualizado_base["TOTAL"] = (
+                df_atualizado_base["QTD/PALETE"]
+                * df_atualizado_base["ENTRADA"]
+                * df_atualizado_base["PESO UNITÁRIO"]
+            )
           df_atualizado_base["Nome_Gaveta"] = nome_gaveta_atual
 
           st.session_state.materiais_gaveta = st.session_state.materiais_gaveta[
@@ -430,7 +450,8 @@ elif menu == "📊 Dashboard Geral":
     with c1:
       st.metric("Total de Registros", len(df_global))
     with c2:
-      st.metric("Total Geral Acumulado", f"{df_global['TOTAL'].sum():,.2f}")
+      if "TOTAL" in df_global.columns:
+        st.metric("Total Geral Acumulado", f"{df_global['TOTAL'].sum():,.2f}")
     with c3:
       st.metric("Total de Gavetas", len(st.session_state.gavetas))
 
