@@ -378,4 +378,3 @@ with tabs[3]:
         st.download_button("📥 Baixar Planilha Automatizada (CSV)", df_show.to_csv(index=False).encode('utf-8'), f"planilha_automatizada_{date.today()}.csv", "text/csv", type="primary", use_container_width=True)
 
         st.markdown(f"**Resumo:** {len(df_show)} linhas | Total Geral: {df_show['TOTAL'].sum():,.0f} | Fórmula: TOTAL = QTD/PALETE × ENTRADA")
-    
