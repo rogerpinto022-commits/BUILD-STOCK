@@ -2,29 +2,46 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(layout="wide")
-st.title("🗄️ ESTOQUE GAVETA - TOTAL REALIZADO")
+st.title("🗄️ ESTOQUE GAVETA")
 
 if 'dados' not in st.session_state:
+    # VALORES EXATOS DA SUA IMAGEM
     st.session_state.dados = [
-        {"ID":15, "DESCRIÇÃO":"BLOCOS DE FUNDO", "LOCAL":"SALA ANEXA", "SALDO":0.0},
-        {"ID":15, "DESCRIÇÃO":"BLOCOS DE FUNDO", "LOCAL":"BARRACÃO", "SALDO":0.0},
-        {"ID":16, "DESCRIÇÃO":"BARRAS CATODICAS", "LOCAL":"SALA ANEXA", "SALDO":0.0},
-        {"ID":16, "DESCRIÇÃO":"BARRAS CATODICAS", "LOCAL":"BARRACÃO", "SALDO":0.0},
+        {"ID":15, "DESCRIÇÃO":"BLOCOS DE FUNDO", "LOCAL":"SALA ANEXA", "SALDO":118.0},
+        {"ID":15, "DESCRIÇÃO":"BLOCOS DE FUNDO", "LOCAL":"BARRACÃO", "SALDO":210.0},
+        {"ID":16, "DESCRIÇÃO":"BARRAS CATODICAS", "LOCAL":"SALA ANEXA", "SALDO":118.0},
+        {"ID":16, "DESCRIÇÃO":"BARRAS CATODICAS", "LOCAL":"BARRACÃO", "SALDO":502.0},
     ]
 
 if 'mov' not in st.session_state:
-    st.session_state.mov = []
+    st.session_state.mov = [
+        {"TIPO":"ENTRADA", "ID":15, "LOCAL":"SALA ANEXA", "QTD":118},
+        {"TIPO":"ENTRADA", "ID":15, "LOCAL":"BARRACÃO", "QTD":210},
+        {"TIPO":"ENTRADA", "ID":16, "LOCAL":"SALA ANEXA", "QTD":118},
+        {"TIPO":"ENTRADA", "ID":16, "LOCAL":"BARRACÃO", "QTD":502},
+    ]
+
+if 'meta' not in st.session_state:
+    st.session_state.meta = 300.0
+
+# CAMPO META
+st.sidebar.header("🎯 META")
+st.sidebar.caption("Campo para preencher META mensal")
+meta_input = st.sidebar.number_input("META *", min_value=1.0, value=st.session_state.meta, step=1.0)
+st.session_state.meta = meta_input
+META = st.session_state.meta
 
 df = pd.DataFrame(st.session_state.dados)
 
-# SALDOS POR ITEM
+# SALDOS EXATOS
+st.subheader("📦 SALDOS - COMO NA IMAGEM")
+
 for id_item in [15, 16]:
     df_item = df[df["ID"]==id_item]
-    desc = df_item.iloc[0]["DESCRIÇÃO"]
     anexa = df_item[df_item["LOCAL"]=="SALA ANEXA"]["SALDO"].sum()
     barracao = df_item[df_item["LOCAL"]=="BARRACÃO"]["SALDO"].sum()
     geral = anexa + barracao
-    st.markdown(f"### ID {id_item} - {desc}")
+    st.markdown(f"### ID {id_item} - {df_item.iloc[0]['DESCRIÇÃO']}")
     c1, c2, c3 = st.columns(3)
     c1.metric("SALDO SALA ANEXA", f"{anexa:.0f}")
     c2.metric("SALDO BARRACÃO", f"{barracao:.0f}")
@@ -32,40 +49,70 @@ for id_item in [15, 16]:
 
 st.divider()
 
-# CALCULO TOTAL DE ENTRADAS = TOTAL REALIZADO
-if not st.session_state.mov:
-    ent_anexa = sai_anexa = ent_bar = sai_bar = 0
-else:
-    df_mov = pd.DataFrame(st.session_state.mov)
-    ent_anexa = df_mov[(df_mov["LOCAL"]=="SALA ANEXA") & (df_mov["TIPO"]=="ENTRADA")]["QTD"].sum()
-    sai_anexa = df_mov[(df_mov["LOCAL"]=="SALA ANEXA") & (df_mov["TIPO"]=="SAIDA")]["QTD"].sum()
-    ent_bar = df_mov[(df_mov["LOCAL"]=="BARRACÃO") & (df_mov["TIPO"]=="ENTRADA")]["QTD"].sum()
-    sai_bar = df_mov[(df_mov["LOCAL"]=="BARRACÃO") & (df_mov["TIPO"]=="SAIDA")]["QTD"].sum()
+# CALCULOS QUE VOCÊ PEDIU AGORA
+# TOTAL GERAL DE BLOCOS E BARRAS NA SALA ANEXA
+blocos_anexa = df[df["ID"]==15][df["LOCAL"]=="SALA ANEXA"]["SALDO"].sum()
+barras_anexa = df[df["ID"]==16][df["LOCAL"]=="SALA ANEXA"]["SALDO"].sum()
+total_geral_sala_anexa = blocos_anexa + barras_anexa
 
-# TOTAL REALIZADO = TOTAL DE ENTRADAS
-total_entradas = ent_anexa + ent_bar
-total_realizado = total_entradas # IGUAL COMO VOCÊ PEDIU
+# TOTAL GERAL BLOCOS E BARRAS NA SALA ANEXA = 118 + 118 = 236
+# PRODUZIDO = TOTAL GERAL SALA ANEXA
+produzido_qtd = total_geral_sala_anexa
 
+# PRODUZIDO EM % = PRODUZIDO / META * 100 (ou META/PRODUZIDO como você escreveu)
+produzido_percent_meta_por_produzido = (META / produzido_qtd * 100) if produzido_qtd>0 else 0
+produzido_percent_produzido_por_meta = (produzido_qtd / META * 100) if META>0 else 0
+
+# TOTAL DE ENTRADAS
+df_mov = pd.DataFrame(st.session_state.mov)
+total_entradas = df_mov[df_mov["TIPO"]=="ENTRADA"]["QTD"].sum()
+total_realizado = total_entradas
+sai_anexa = df_mov[(df_mov["LOCAL"]=="SALA ANEXA") & (df_mov["TIPO"]=="SAIDA")]["QTD"].sum()
 sai_anexa_div13 = sai_anexa / 13 if sai_anexa>0 else 0
 
-st.subheader("📊 TOTAIS - TOTAL DE ENTRADAS = TOTAL REALIZADO")
-c1,c2,c3,c4,c5 = st.columns(5)
-c1.metric("TOTAL DE ENTRADAS", f"{total_entradas:.0f}", "TOTAL REALIZADO")
-c2.metric("TOTAL REALIZADO", f"{total_realizado:.0f}", "= ENTRADAS")
-c3.metric("SALA ANEXA ENTRADAS", f"{ent_anexa:.0f}")
-c4.metric("SALA ANEXA SAIDAS", f"{sai_anexa:.0f}")
-c5.metric("SALA ANEXA SAIDAS /13", f"{sai_anexa_div13:.2f}", f"{sai_anexa:.0f}/13")
+st.subheader(f"📊 TOTAL GERAL SALA ANEXA: {total_geral_sala_anexa:.0f} | META: {META:.0f}")
 
-# GRÁFICO
+col1, col2, col3, col4, col5 = st.columns(5)
+col1.metric("TOTAL GERAL BLOCOS+BARRAS SALA ANEXA", f"{total_geral_sala_anexa:.0f}", f"{blocos_anexa:.0f}+{barras_anexa:.0f}")
+col2.metric("META", f"{META:.0f}")
+col3.metric("PRODUZIDO (QTD)", f"{produzido_qtd:.0f}", "= TOTAL SALA ANEXA")
+col4.metric("PRODUZIDO % = PRODUZIDO/META", f"{produzido_percent_produzido_por_meta:.1f}%", f"{produzido_qtd:.0f}/{META:.0f}")
+col5.metric("META/PRODUZIDO %", f"{produzido_percent_meta_por_produzido:.1f}%", f"{META:.0f}/{produzido_qtd:.0f}")
+
+st.progress(min(produzido_percent_produzido_por_meta/100, 1.0))
+
+# GRÁFICO REFLETE EXATAMENTE AS INFORMAÇÕES - NÃO SOMA TUDO
+st.markdown("### Gráfico 1 - Exato da imagem (por Item e Local)")
+
 df_graf = pd.DataFrame([
-    {"LOCAL":"SALA ANEXA", "ENTRADAS":ent_anexa, "SAIDAS":sai_anexa, "SAIDAS/13":round(sai_anexa_div13,2), "TOTAL REALIZADO":ent_anexa},
-    {"LOCAL":"BARRACÃO", "ENTRADAS":ent_bar, "SAIDAS":sai_bar, "SAIDAS/13":round(sai_bar/13,2) if sai_bar>0 else 0, "TOTAL REALIZADO":ent_bar},
+    {"ITEM":"ID 15 BLOCOS DE FUNDO - SALA ANEXA", "SALDO": blocos_anexa},
+    {"ITEM":"ID 15 BLOCOS DE FUNDO - BARRACÃO", "SALDO": df[df["ID"]==15][df["LOCAL"]=="BARRACÃO"]["SALDO"].sum()},
+    {"ITEM":"ID 16 BARRAS CATODICAS - SALA ANEXA", "SALDO": barras_anexa},
+    {"ITEM":"ID 16 BARRAS CATODICAS - BARRACÃO", "SALDO": df[df["ID"]==16][df["LOCAL"]=="BARRACÃO"]["SALDO"].sum()},
 ])
+st.bar_chart(df_graf.set_index("ITEM"))
 
-st.bar_chart(df_graf.set_index("LOCAL")[["ENTRADAS","SAIDAS"]])
-st.bar_chart(df_graf.set_index("LOCAL")[["TOTAL REALIZADO"]])
-st.write("Tabela TOTAL DE ENTRADAS = TOTAL REALIZADO e SAIDAS/13")
-st.dataframe(df_graf, use_container_width=True)
+st.markdown("### Gráfico 2 - TOTAL GERAL BLOCOS E BARRAS NA SALA ANEXA")
+
+df_total_anexa = pd.DataFrame([
+    {"TIPO":"BLOCOS SALA ANEXA", "QTD":blocos_anexa},
+    {"TIPO":"BARRAS SALA ANEXA", "QTD":barras_anexa},
+    {"TIPO":"TOTAL GERAL SALA ANEXA", "QTD":total_geral_sala_anexa},
+    {"TIPO":"META", "QTD":META},
+])
+st.bar_chart(df_total_anexa.set_index("TIPO"))
+
+st.markdown("### Gráfico 3 - PRODUZIDO em % = META / PRODUZIDO")
+
+df_perc = pd.DataFrame([
+    {"TIPO":"PRODUZIDO QTD", "QTD":produzido_qtd},
+    {"TIPO":"META", "QTD":META},
+    {"TIPO":"PRODUZIDO % (PRODUZIDO/META)", "QTD":produzido_percent_produzido_por_meta},
+    {"TIPO":"META/PRODUZIDO %", "QTD":produzido_percent_meta_por_produzido},
+])
+st.bar_chart(df_perc.set_index("TIPO"))
+
+st.dataframe(df_total_anexa, use_container_width=True)
 
 st.divider()
 
@@ -73,22 +120,21 @@ tab1, tab2, tab3 = st.tabs(["NOVA ENTRADA", "NOVA SAIDA", "EXCLUIR REGISTRO"])
 
 with tab1:
     st.header("NOVA ENTRADA")
-    st.info(f"TOTAL DE ENTRADAS = TOTAL REALIZADO = {total_realizado:.0f} - A cada NOVA ENTRADA aumenta o TOTAL REALIZADO")
+    st.info(f"TOTAL GERAL SALA ANEXA = {blocos_anexa:.0f} + {barras_anexa:.0f} = {total_geral_sala_anexa:.0f} | META {META:.0f} | PRODUZIDO {produzido_percent_produzido_por_meta:.1f}%")
     id_sel = st.selectbox("ID *", [15, 16], format_func=lambda x: f"ID {x} - {'BLOCOS DE FUNDO' if x==15 else 'BARRAS CATODICAS'}", key="ent_id")
     local_sel = st.selectbox("LOCAL *", ["SALA ANEXA", "BARRACÃO"], key="ent_local")
-    qtd = st.number_input("Quantidade *", min_value=1.0, value=13.0, step=1.0, key="ent_qtd")
+    qtd = st.number_input("Quantidade *", min_value=1.0, value=1.0, step=1.0, key="ent_qtd")
     if st.button("✅ REGISTRAR ENTRADA", type="primary", use_container_width=True):
         idx = next((i for i,d in enumerate(st.session_state.dados) if d["ID"]==id_sel and d["LOCAL"]==local_sel), None)
         st.session_state.dados[idx]["SALDO"] += qtd
         st.session_state.mov.append({"TIPO":"ENTRADA", "ID":id_sel, "LOCAL":local_sel, "QTD":qtd})
-        st.success(f"NOVA ENTRADA +{qtd:.0f} | TOTAL DE ENTRADAS {total_entradas:.0f} → {total_entradas+qtd:.0f} | TOTAL REALIZADO {total_realizado:.0f} → {total_realizado+qtd:.0f}")
         st.rerun()
 
 with tab2:
     st.header("NOVA SAIDA")
     id_sel = st.selectbox("ID *", [15, 16], format_func=lambda x: f"ID {x} - {'BLOCOS DE FUNDO' if x==15 else 'BARRAS CATODICAS'}", key="sai_id")
     local_sel = st.selectbox("LOCAL *", ["SALA ANEXA", "BARRACÃO"], key="sai_local")
-    qtd = st.number_input("Quantidade *", min_value=1.0, value=13.0, step=1.0, key="sai_qtd")
+    qtd = st.number_input("Quantidade *", min_value=1.0, value=1.0, step=1.0, key="sai_qtd")
     if st.button("✅ REGISTRAR SAIDA", type="primary", use_container_width=True):
         idx = next((i for i,d in enumerate(st.session_state.dados) if d["ID"]==id_sel and d["LOCAL"]==local_sel), None)
         if qtd > st.session_state.dados[idx]["SALDO"]:
