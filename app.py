@@ -3,8 +3,47 @@ import pandas as pd
 from datetime import datetime
 import os
 
-st.set_page_config(layout="wide", page_title="ESTOQUE LIMPO")
-st.title("🗄️ ESTOQUE")
+st.set_page_config(layout="wide", page_title="ESTOQUE LOGIN")
+# ============ LOGIN ============
+if 'logado' not in st.session_state:
+    st.session_state.logado = False
+    st.session_state.usuario = ""
+    st.session_state.perfil = ""
+
+USUARIOS = {
+    "admin": {"senha": "admin123", "perfil": "ADMINISTRADOR"},
+    "operador": {"senha": "operador123", "perfil": "OPERADOR"},
+    "gerencia": {"senha": "gerencia123", "perfil": "ADMINISTRADOR"},
+}
+
+def login():
+    st.title("🔐 LOGIN - CONTROLE DE ACESSO")
+    st.markdown("### ESTOQUE GAVETA")
+    with st.container(border=True):
+        usuario = st.text_input("Usuário")
+        senha = st.text_input("Senha", type="password")
+        if st.button("✅ ENTRAR", type="primary", use_container_width=True):
+            if usuario in USUARIOS and USUARIOS[usuario]["senha"] == senha:
+                st.session_state.logado = True
+                st.session_state.usuario = usuario
+                st.session_state.perfil = USUARIOS[usuario]["perfil"]
+                st.success(f"Bem-vindo {usuario} - {USUARIOS[usuario]['perfil']}")
+                st.rerun()
+            else:
+                st.error("❌ Usuário ou senha incorretos")
+    st.info("**Teste:** admin / admin123 | operador / operador123")
+
+if not st.session_state.logado:
+    login()
+    st.stop()
+
+# ============ APP LOGADO ============
+st.sidebar.markdown(f"👤 **{st.session_state.usuario.upper()}** - {st.session_state.perfil}")
+if st.sidebar.button("🚪 SAIR / LOGOUT"):
+    st.session_state.logado = False
+    st.rerun()
+
+st.title(f"🗄️ ESTOQUE - {st.session_state.perfil}")
 
 ARQ_DADOS = "dados_estoque.csv"
 ARQ_MOV = "mov_estoque.csv"
@@ -37,7 +76,7 @@ def salvar():
     pd.DataFrame(st.session_state.mov).to_csv(ARQ_MOV, index=False)
     st.toast("✅ SALVO")
 
-# CÁLCULOS
+# CALCULOS ATUALIZADOS
 df = pd.DataFrame(st.session_state.dados)
 df_anexa = df[df["LOCAL"]=="SALA ANEXA"]
 blocos_a = df_anexa[df_anexa["ID"]==15]["SALDO"].sum()
@@ -55,9 +94,17 @@ else:
     ultima = 0
 
 produzido = saldo_a - ultima
-META = 104.0
+META = st.sidebar.number_input("META 104 = 100%", value=104.0)
 
-# TELA LIMPA - SÓ 2 BOTÕES PRINCIPAIS
+# CONTROLE DE ACESSO
+if st.session_state.perfil == "ADMINISTRADOR":
+    st.sidebar.button("💾 SALVAR ENTRADA E SAIDA", type="primary", use_container_width=True, on_click=salvar)
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**🔑 ADMIN PODE:** Entrada, Saída, Excluir, Ver Gráficos, Salvar")
+else:
+    st.sidebar.info("👷 OPERADOR só pode: Entrada e Saída")
+
+# TELA LIMPA
 st.markdown("### O QUE VOCÊ QUER FAZER?")
 c1, c2, c3 = st.columns(3)
 if c1.button("📦 SALA ANEXA", type="primary", use_container_width=True):
@@ -72,24 +119,24 @@ if 'tela' not in st.session_state:
 
 st.divider()
 
-# SÓ MOSTRA SE CLICAR
 if st.session_state.tela == "ANEXA":
-    st.subheader("📦 SALA ANEXA")
+    st.subheader("📦 SALA ANEXA - ATUALIZA AUTOMÁTICO")
 
-    # Botão para ver informações
-    if st.button("👁️ VER INFORMAÇÕES SALDO"):
+    if st.button("👁️ VER INFORMAÇÕES"):
         st.session_state.ver_info_anexa = not st.session_state.get('ver_info_anexa', False)
 
     if st.session_state.get('ver_info_anexa', False):
         c1,c2,c3,c4 = st.columns(4)
-        c1.metric("SALDO TOTAL", f"{saldo_a:.0f}")
+        c1.metric("SALDO TOTAL", f"{saldo_a:.0f}", f"BLOCOS {blocos_a:.0f} / BARRAS {barras_a:.0f}")
         c2.metric("SOMA MÊS", f"{soma_mes:.0f}")
         c3.metric("ULTIMA", f"{ultima:.0f}")
         c4.metric("PRODUZIDO", f"{produzido:.0f}")
 
-    st.divider()
+    opcoes = ["NOVA ENTRADA", "NOVA SAIDA"]
+    if st.session_state.perfil == "ADMINISTRADOR":
+        opcoes += ["EXCLUIR REGISTRO", "SALVAR ENTRADA E SAIDA"]
 
-    op = st.radio("Selecione:", ["NOVA ENTRADA", "NOVA SAIDA", "EXCLUIR REGISTRO", "SALVAR"], horizontal=True, key="op_anexa")
+    op = st.radio("Selecione:", opcoes, horizontal=True, key="op_anexa")
 
     if op == "NOVA ENTRADA":
         with st.container(border=True):
@@ -114,8 +161,9 @@ if st.session_state.tela == "ANEXA":
                     salvar()
                     st.rerun()
 
-    elif op == "EXCLUIR REGISTRO":
+    elif op == "EXCLUIR REGISTRO" and st.session_state.perfil == "ADMINISTRADOR":
         with st.container(border=True):
+            st.warning("🔐 APENAS ADMINISTRADOR")
             lista = [f"{i} - {m['DATA'].strftime('%d/%m %H:%M')} - {m['TIPO']} ID{m['ID']} QTD{m['QTD']}" for i,m in enumerate(st.session_state.mov) if m["LOCAL"]=="SALA ANEXA"]
             sel = st.selectbox("Registro para excluir", lista) if lista else None
             if st.button("❌ EXCLUIR E SALVAR"):
@@ -130,15 +178,13 @@ if st.session_state.tela == "ANEXA":
                     st.session_state.mov.pop(i)
                     salvar()
                     st.rerun()
-    else:
+    elif op == "SALVAR ENTRADA E SAIDA":
         st.button("💾 SALVAR ENTRADA E SAIDA", type="primary", on_click=salvar)
 
 elif st.session_state.tela == "BARRACAO":
     st.subheader("🏚️ BARRACÃO - ZERADO")
-
     if st.button("👁️ VER SALDO BARRACÃO"):
         st.session_state.ver_info_bar = not st.session_state.get('ver_info_bar', False)
-
     if st.session_state.get('ver_info_bar', False):
         df_b = df[df["LOCAL"]=="BARRACÃO"]
         blocos_b = df_b[df_b["ID"]==15]["SALDO"].sum()
@@ -148,7 +194,11 @@ elif st.session_state.tela == "BARRACAO":
         c2.metric("BARRAS", f"{barras_b:.0f}")
         c3.metric("TOTAL", f"{min(blocos_b, barras_b):.0f}")
 
-    op = st.radio("Selecione:", ["NOVA ENTRADA", "NOVA SAIDA", "EXCLUIR", "SALVAR"], horizontal=True, key="op_bar")
+    opcoes_b = ["NOVA ENTRADA", "NOVA SAIDA"]
+    if st.session_state.perfil == "ADMINISTRADOR":
+        opcoes_b += ["EXCLUIR", "SALVAR"]
+
+    op = st.radio("Selecione:", opcoes_b, horizontal=True, key="op_bar")
 
     if op == "NOVA ENTRADA":
         with st.container(border=True):
@@ -171,30 +221,17 @@ elif st.session_state.tela == "BARRACAO":
                     st.session_state.mov.append({"DATA": datetime.now(), "TIPO":"SAIDA", "ID":id_sai, "LOCAL":"BARRACÃO", "QTD":qtd})
                     salvar()
                     st.rerun()
-    elif op == "EXCLUIR":
-        lista = [f"{i} - {m['DATA'].strftime('%d/%m %H:%M')} ID{m['ID']} QTD{m['QTD']}" for i,m in enumerate(st.session_state.mov) if m["LOCAL"]=="BARRACÃO"]
-        sel = st.selectbox("Registro", lista) if lista else None
-        if st.button("❌ EXCLUIR"):
-            if sel:
-                i = int(sel.split(" - ")[0])
-                reg = st.session_state.mov[i]
-                idx_d = next((j for j,d in enumerate(st.session_state.dados) if d["ID"]==reg["ID"] and d["LOCAL"]=="BARRACÃO"), None)
-                if reg["TIPO"]=="ENTRADA":
-                    st.session_state.dados[idx_d]["SALDO"] -= reg["QTD"]
-                else:
-                    st.session_state.dados[idx_d]["SALDO"] += reg["QTD"]
-                st.session_state.mov.pop(i)
-                salvar()
-                st.rerun()
-    else:
-        st.button("💾 SALVAR ENTRADA E SAIDA", type="primary", on_click=salvar)
 
-else: # CONSULTA
-    st.subheader("📊 CONSULTAR GRÁFICOS")
+else: # CONSULTA - SÓ ADMIN
+    if st.session_state.perfil!= "ADMINISTRADOR":
+        st.error("🔐 APENAS ADMINISTRADOR PODE CONSULTAR GRÁFICOS")
+        st.stop()
+
+    st.subheader("📊 CONSULTAR - SÓ ADMINISTRADOR")
     tipo = st.selectbox("O que consultar?", ["Grafico Produzido", "Historico com Data/Hora", "Saldo Detalhado"])
 
-    if tipo == "Grafico Produzido":
-        if st.button("👁️ MOSTRAR GRÁFICO"):
+    if st.button("👁️ MOSTRAR"):
+        if tipo == "Grafico Produzido":
             df_graf = pd.DataFrame([
                 {"TIPO":"SALDO", "QTD":saldo_a},
                 {"TIPO":"SOMA MÊS", "QTD":soma_mes},
@@ -202,13 +239,10 @@ else: # CONSULTA
                 {"TIPO":"PRODUZIDO", "QTD":produzido},
             ])
             st.bar_chart(df_graf.set_index("TIPO"))
-
-    elif tipo == "Historico com Data/Hora":
-        if st.button("👁️ MOSTRAR HISTÓRICO"):
+        elif tipo == "Historico com Data/Hora":
             st.dataframe(df_mov.sort_values("DATA", ascending=False) if not df_mov.empty else df_mov, use_container_width=True)
-
-    else:
-        if st.button("👁️ MOSTRAR SALDO"):
+        else:
             st.dataframe(df, use_container_width=True)
 
     st.button("💾 SALVAR ENTRADA E SAIDA", type="primary", on_click=salvar)
+       
