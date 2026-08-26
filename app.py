@@ -4,6 +4,7 @@ import plotly.express as px
 from datetime import datetime
 import pytz
 import os
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Controle Duplo", layout="wide")
 fuso = pytz.timezone('America/Sao_Paulo')
@@ -62,6 +63,41 @@ if not st.session_state.logado:
 
 agora_br = datetime.now(fuso)
 
+# --- CONTROLE DE TELA - NOVO QUE VOCÊ PEDIU ---
+st.sidebar.divider()
+st.sidebar.subheader("📱 Controle de Tela")
+
+# MANTER ABERTO ligado por padrão como você pediu
+manter_aberto = st.sidebar.toggle("🔒 MANTER ABERTO", value=True, help="Não deixa a tela apagar na contagem")
+
+if manter_aberto:
+    components.html("""
+    <script>
+    let wakeLock = null;
+    async function requestLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Tela travada ligada');
+        }
+      } catch(e){ console.log(e); }
+    }
+    requestLock();
+    document.addEventListener('visibilitychange', () => {
+      if (wakeLock!== null && document.visibilityState === 'visible') {
+        requestLock();
+      }
+    });
+    </script>
+    """, height=0)
+    st.sidebar.caption("✅ Tela travada ligada")
+
+if st.sidebar.button("🔴 DESLIGAR / FECHAR", type="primary", use_container_width=True):
+    salvar()
+    st.sidebar.warning("Salvando e fechando...")
+    st.session_state.clear()
+    st.stop()
+
 # --- ADMIN ---
 if st.session_state.perfil=="ADMINISTRADOR":
     with st.sidebar.expander("🔑 ADMIN - CONTROLE TOTAL", expanded=False):
@@ -95,7 +131,8 @@ if st.session_state.perfil=="ADMINISTRADOR":
                     st.session_state.dados=df_d.to_dict('records')
                     st.success(f"{nnome} cadastrado"); st.rerun()
 
-    if st.sidebar.button("🚪 Sair"):
+    if st.sidebar.button("🚪 Sair do Login"):
+        salvar()
         st.session_state.clear(); st.rerun()
 
 # --- DADOS ---
@@ -124,85 +161,72 @@ if st.session_state.perm_grafico:
 if "tela" not in st.session_state: st.session_state.tela="ANEXA" if pode_anexa else "BARRACAO"
 st.divider()
 
-# --- LÓGICA AUTOMÁTICA QUE VOCÊ PEDIU ---
+# --- LÓGICA AUTOMÁTICA ---
 def lancar(id_sel, qtd, local_sel, tipo_sel):
     agora = datetime.now(fuso)
     nome = next(d["NOME"] for d in st.session_state.dados if d["ID"]==id_sel)
-
     idx_anexa = next((i for i,d in enumerate(st.session_state.dados) if d["ID"]==id_sel and d["LOCAL"]=="SALA ANEXA"),None)
     idx_barracao = next((i for i,d in enumerate(st.session_state.dados) if d["ID"]==id_sel and d["LOCAL"]=="BARRACÃO"),None)
-
     obs=""
-
     if local_sel=="SALA ANEXA" and tipo_sel=="Entrada":
-        # AUTOMÁTICO: Sai do Barracão e entra na Sala - TOTAL NÃO MUDA
         st.session_state.dados[idx_barracao]["SALDO"] -= qtd
         st.session_state.dados[idx_anexa]["SALDO"] += qtd
         obs = f"TRANSFERÊNCIA AUTO: Barracão -> Sala Anexa | Total Geral não muda"
-
     elif local_sel=="BARRACÃO" and tipo_sel=="Saída":
-        # AUTOMÁTICO: Sai do Barracão e entra na Sala - TOTAL NÃO MUDA (mesma coisa ao contrário)
         st.session_state.dados[idx_barracao]["SALDO"] -= qtd
         st.session_state.dados[idx_anexa]["SALDO"] += qtd
         obs = f"TRANSFERÊNCIA AUTO: Barracão -> Sala Anexa | Total Geral não muda"
-
     elif local_sel=="SALA ANEXA" and tipo_sel=="Saída":
-        # VENDA REAL: Sai da Sala e desconta do TOTAL GERAL
         st.session_state.dados[idx_anexa]["SALDO"] -= qtd
         obs = f"SAÍDA REAL: Descontou da Sala e do TOTAL GERAL"
-
     elif local_sel=="BARRACÃO" and tipo_sel=="Entrada":
-        # COMPRA REAL: Entra no Barracão e aumenta TOTAL GERAL
         st.session_state.dados[idx_barracao]["SALDO"] += qtd
         obs = f"ENTRADA REAL: Compra - Aumentou Barracão e TOTAL GERAL"
-
     st.session_state.mov.append({"DATA":agora, "ID":id_sel, "NOME":nome, "LOCAL":local_sel, "TIPO":tipo_sel, "QTD":qtd, "USUARIO":st.session_state.usuario, "OBS":obs})
     salvar()
+
+# --- AUTO PREENCHIMENTO DA ÚLTIMA MOVIMENTAÇÃO ---
+ult_qtd = 1.0
+if st.session_state.mov:
+    ult_qtd = float(st.session_state.mov[-1]["QTD"])
 
 if st.session_state.tela=="ANEXA" and pode_anexa:
     st.subheader("📦 SALA ANEXA")
     ids = df_estoque[df_estoque["LOCAL"]=="SALA ANEXA"]["ID"].unique()
     nomes = {r["ID"]:r["NOME"] for r in st.session_state.dados if r["LOCAL"]=="SALA ANEXA"}
     id_e = st.selectbox("Material", ids, format_func=lambda x: f"{x} - {nomes[x]}")
-    qtd = st.number_input("Qtd", value=1.0, min_value=0.1)
+    qtd = st.number_input("Qtd", value=ult_qtd, min_value=0.1, help=f"Última qtd usada: {ult_qtd}")
     col1,col2=st.columns(2)
-    if st.session_state.perm_entrada and col1.button("✅ ENTRADA na ANEXA (vem do Barracão) - AUTO", type="primary", use_container_width=True):
-        lancar(id_e, qtd, "SALA ANEXA", "Entrada"); st.success("Transferência feita! Barracão diminuiu, Anexa aumentou. Total igual."); st.rerun()
-    if st.session_state.perm_saida and col2.button("✅ SAÍDA da ANEXA (venda real) - Desconta TOTAL", use_container_width=True):
-        lancar(id_e, qtd, "SALA ANEXA", "Saída"); st.warning("Saída real! Descontou da Anexa e do TOTAL GERAL"); st.rerun()
+    if st.session_state.perm_entrada and col1.button("✅ CONFIRMAR - ENTRADA na ANEXA (vem do Barracão) - AUTO", type="primary", use_container_width=True):
+        lancar(id_e, qtd, "SALA ANEXA", "Entrada"); st.success("✅ CONFIRMADO! Transferência feita! Barracão diminuiu, Anexa aumentou. Total igual."); st.rerun()
+    if st.session_state.perm_saida and col2.button("✅ CONFIRMAR - SAÍDA da ANEXA (venda real) - Desconta TOTAL", use_container_width=True):
+        lancar(id_e, qtd, "SALA ANEXA", "Saída"); st.warning("✅ CONFIRMADO! Saída real! Descontou da Anexa e do TOTAL GERAL"); st.rerun()
 
 elif st.session_state.tela=="BARRACAO" and pode_barracao:
     st.subheader("🏚️ BARRACÃO")
     ids = df_estoque[df_estoque["LOCAL"]=="BARRACÃO"]["ID"].unique()
     nomes = {r["ID"]:r["NOME"] for r in st.session_state.dados if r["LOCAL"]=="BARRACÃO"}
     id_e = st.selectbox("Material", ids, key="b", format_func=lambda x: f"{x} - {nomes[x]}")
-    qtd = st.number_input("Qtd", value=1.0, min_value=0.1, key="qb")
+    qtd = st.number_input("Qtd", value=ult_qtd, min_value=0.1, key="qb", help=f"Última qtd usada: {ult_qtd}")
     col1,col2=st.columns(2)
-    if st.session_state.perm_entrada and col1.button("✅ ENTRADA no BARRACÃO (compra real) - Aumenta TOTAL", type="primary", use_container_width=True):
-        lancar(id_e, qtd, "BARRACÃO", "Entrada"); st.success("Compra! Aumentou Barracão e TOTAL GERAL"); st.rerun()
-    if st.session_state.perm_saida and col2.button("✅ SAÍDA do BARRACÃO (vai pra Anexa) - AUTO", use_container_width=True):
-        lancar(id_e, qtd, "BARRACÃO", "Saída"); st.success("Transferência! Barracão -> Anexa"); st.rerun()
+    if st.session_state.perm_entrada and col1.button("✅ CONFIRMAR - ENTRADA no BARRACÃO (compra real) - Aumenta TOTAL", type="primary", use_container_width=True):
+        lancar(id_e, qtd, "BARRACÃO", "Entrada"); st.success("✅ CONFIRMADO! Compra! Aumentou Barracão e TOTAL GERAL"); st.rerun()
+    if st.session_state.perm_saida and col2.button("✅ CONFIRMAR - SAÍDA do BARRACÃO (vai pra Anexa) - AUTO", use_container_width=True):
+        lancar(id_e, qtd, "BARRACÃO", "Saída"); st.success("✅ CONFIRMADO! Transferência! Barracão -> Anexa"); st.rerun()
 
-else: # GRAFICOS
+else:
     if st.session_state.perm_grafico:
         st.subheader("📊 Gráficos - Horário Brasília")
-
-        # Grafico estoque barra vs sala
         fig1 = px.bar(pivot, x="NOME", y=["BARRACÃO","SALA ANEXA"], barmode="group", title="Estoque: Barracão vs Sala Anexa")
         st.plotly_chart(fig1, use_container_width=True)
-
-        # Pizza total geral
         fig_pizza = px.pie(pivot, values="TOTAL GERAL", names="NOME", title="Pizza - TOTAL GERAL (Barracão + Sala)")
         st.plotly_chart(fig_pizza, use_container_width=True)
-
-        # Mensal, Semestral, Anual
         if st.session_state.mov:
             df_mov = pd.DataFrame(st.session_state.mov)
             df_mov["DATA"] = pd.to_datetime(df_mov["DATA"])
             df_mov["MES"] = df_mov["DATA"].dt.to_period("M").astype(str)
             df_mov["SEMESTRE"] = df_mov["DATA"].dt.year.astype(str) + "-S" + ((df_mov["DATA"].dt.month-1)//6+1).astype(str)
             df_mov["ANO"] = df_mov["DATA"].dt.year.astype(str)
-
             c1,c2,c3 = st.columns(3)
             with c1:
                 mensal = df_mov.groupby(["MES","TIPO"])["QTD"].sum().reset_index()
@@ -216,29 +240,23 @@ else: # GRAFICOS
                 anual = df_mov.groupby(["ANO","TIPO"])["QTD"].sum().reset_index()
                 fig_a = px.bar(anual, x="ANO", y="QTD", color="TIPO", barmode="group", title="Anual")
                 st.plotly_chart(fig_a, use_container_width=True)
-
             st.divider()
             st.subheader("📋 Histórico com hora de Brasília")
             st.dataframe(df_mov.sort_values("DATA", ascending=False), use_container_width=True)
-
             st.subheader("🗑️ Excluir registro - Reverte saldo automaticamente")
             if not df_mov.empty:
                 idx = st.number_input("Índice para excluir (0 é o primeiro)", min_value=0, max_value=len(st.session_state.mov)-1, value=len(st.session_state.mov)-1)
                 if st.button("🗑️ EXCLUIR E REVERTER"):
                     mov = st.session_state.mov[idx]
-                    # Reverte lógica
                     idx_an = next((i for i,d in enumerate(st.session_state.dados) if d["ID"]==mov["ID"] and d["LOCAL"]=="SALA ANEXA"),None)
                     idx_ba = next((i for i,d in enumerate(st.session_state.dados) if d["ID"]==mov["ID"] and d["LOCAL"]=="BARRACÃO"),None)
-
                     if "TRANSFERÊNCIA" in mov["OBS"]:
-                        # Desfaz transferência
                         st.session_state.dados[idx_ba]["SALDO"] += mov["QTD"]
                         st.session_state.dados[idx_an]["SALDO"] -= mov["QTD"]
                     elif "SAÍDA REAL" in mov["OBS"]:
                         st.session_state.dados[idx_an]["SALDO"] += mov["QTD"]
                     elif "ENTRADA REAL" in mov["OBS"]:
                         st.session_state.dados[idx_ba]["SALDO"] -= mov["QTD"]
-
                     del st.session_state.mov[idx]
                     salvar()
                     st.success("Excluído e revertido!"); st.rerun()
