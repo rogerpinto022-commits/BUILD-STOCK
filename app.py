@@ -20,10 +20,10 @@ def get_now_br():
 
 
 # Arquivos de Persistência Local (CSV)
-ESTOQUE_FILE = "build_stock_estoque_v5.csv"
-MOV_FILE = "build_stock_movimentacoes_v5.csv"
-PERMISSOES_FILE = "build_stock_permissoes_v5.csv"
-COMBO_FILE = "build_stock_combos_v5.csv"
+ESTOQUE_FILE = "build_stock_estoque_v6.csv"
+MOV_FILE = "build_stock_movimentacoes_v6.csv"
+PERMISSOES_FILE = "build_stock_permissoes_v6.csv"
+COMBO_FILE = "build_stock_combos_v6.csv"
 
 areas_reais = [
     "🏭 Galpão de Materiais Refratários",
@@ -31,27 +31,173 @@ areas_reais = [
     "🚪 Sala Anexa",
 ]
 
+
+# CARGA INICIAL PRÉ-CADASTRADA (LTC 02/07/2026 - 09:30 BRT)
+def criar_carga_inicial_ltc():
+  dados_iniciais = [
+      # 1 | CIMENTO LAFARGE FONDU
+      {
+          "ID": "ID-1",
+          "Descrição": "CIMENTO LAFARGE FONDU",
+          "Marca": "LAFARGE",
+          "Lote": "09/07/25",
+          "Fabricação": "2025-07-09",
+          "Validade": "2026-07-09",
+          "Área": areas_reais[0],
+          "Qtd Externa": 6.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1400.0,
+          "Unidade Final": "KG",
+          "Total Geral": 8400.0,
+      },
+      # 2 | CARBETO DE SILICIO
+      {
+          "ID": "ID-2",
+          "Descrição": "CARBETO DE SILICIO",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-02",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 3.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 3000.0,
+      },
+      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-1200kg
+      {
+          "ID": "ID-3",
+          "Descrição": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S",
+          "Marca": "TECNOFIRE",
+          "Lote": "LOTE-3A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 5.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1200.0,
+          "Unidade Final": "KG",
+          "Total Geral": 6000.0,
+      },
+      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-400kg
+      {
+          "ID": "ID-3",
+          "Descrição": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S",
+          "Marca": "TECNOFIRE",
+          "Lote": "LOTE-3B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 400.0,
+          "Unidade Final": "KG",
+          "Total Geral": 400.0,
+      },
+      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1250kg
+      {
+          "ID": "ID-3",
+          "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
+          "Marca": "PLACIBAR",
+          "Lote": "LOTE-3C",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 4.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1250.0,
+          "Unidade Final": "KG",
+          "Total Geral": 5000.0,
+      },
+      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1000kg
+      {
+          "ID": "ID-3",
+          "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
+          "Marca": "PLACIBAR",
+          "Lote": "LOTE-3D",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 1000.0,
+      },
+      # 4 | CASTIBAR PSI UG 1250kg
+      {
+          "ID": "ID-4",
+          "Descrição": "CASTIBAR PSI UG",
+          "Marca": "CASTIBAR",
+          "Lote": "LOTE-4A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 4.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1250.0,
+          "Unidade Final": "KG",
+          "Total Geral": 5000.0,
+      },
+      # 4 | CASTIBAR PSI UG-1000kg
+      {
+          "ID": "ID-4",
+          "Descrição": "CASTIBAR PSI UG",
+          "Marca": "CASTIBAR",
+          "Lote": "LOTE-4B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 4.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 1000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 4000.0,
+      },
+      # 5 | LÃ DE ROCHA IBAR SEM CORTE
+      {
+          "ID": "ID-5",
+          "Descrição": "LÃ DE ROCHA IBAR SEM CORTE",
+          "Marca": "IBAR",
+          "Lote": "LOTE-5A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Caixa",
+          "Qtd Interna por Externa": 6.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 6.0,
+      },
+  ]
+  return pd.DataFrame(dados_iniciais)
+
+
 # 1. CARREGAMENTO COM PERSISTÊNCIA REAL
 if "estoque_df" not in st.session_state:
   if os.path.exists(ESTOQUE_FILE):
     st.session_state.estoque_df = pd.read_csv(ESTOQUE_FILE)
   else:
-    st.session_state.estoque_df = pd.DataFrame(columns=[
-        "ID",
-        "Descrição",
-        "Marca",
-        "Lote",
-        "Fabricação",
-        "Validade",
-        "Área",
-        "Qtd Externa",
-        "Emb Externa",
-        "Qtd Interna por Externa",
-        "Emb Interna",
-        "Medida por Interna",
-        "Unidade Final",
-        "Total Geral",
-    ])
+    st.session_state.estoque_df = criar_carga_inicial_ltc()
 
 if "mov_df" not in st.session_state:
   if os.path.exists(MOV_FILE):
@@ -73,9 +219,12 @@ if "permissoes_df" not in st.session_state:
   if os.path.exists(PERMISSOES_FILE):
     st.session_state.permissoes_df = pd.read_csv(PERMISSOES_FILE)
   else:
-    st.session_state.permissoes_df = pd.DataFrame(
-        columns=["ID", "Área", "Ativo"]
-    )
+    # Cria permissões ativas para todos os IDs iniciais em todas as áreas
+    perm_list = []
+    for i in [f"ID-{n}" for n in range(1, 6)]:
+      for a in areas_reais:
+        perm_list.append({"ID": i, "Área": a, "Ativo": True})
+    st.session_state.permissoes_df = pd.DataFrame(perm_list)
 
 if "combo_df" not in st.session_state:
   if os.path.exists(COMBO_FILE):
@@ -112,7 +261,9 @@ def garantir_permissao(id_prod, area):
 
 
 # Título Principal
-st.title("📦 BUILD STOCK BR — Gestão de Almoxarifado Industrial & Expedição")
+st.title(
+    "📦 BUILD STOCK BR — Almoxarifado Industrial (LTC 02/07/2026 Carregada)"
+)
 st.markdown("---")
 
 # Menu Lateral
@@ -196,7 +347,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
   with st.form("form_mestre", clear_on_submit=True):
     c1, c2, c3 = st.columns(3)
     with c1:
-      id_prod = st.text_input("🔖 ID Rastreador / Código *")
+      id_prod = st.text_input("🔖 ID Rastreador / Código (Ex: ID-6) *")
       descricao = st.text_input("📝 Descrição do Material *")
     with c2:
       marca = st.text_input("🏷️ Marca / Fabricante *")
@@ -217,7 +368,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
       )
     with c6:
       qtd_int_ext = st.number_input(
-          "Qtd Interna por Externa", min_value=0.1, value=40.0
+          "Qtd Interna por Externa", min_value=0.1, value=1.0
       )
     with c7:
       emb_int = st.selectbox(
@@ -225,7 +376,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
       )
 
     medida_int = st.number_input(
-        "⚖️ Medida por Unidade Interna", min_value=0.01, value=25.0
+        "⚖️ Medida por Unidade Interna", min_value=0.01, value=1000.0
     )
     un_final = st.selectbox("📏 Unidade Final", ["KG", "UN", "L", "M", "M²"])
 
@@ -445,7 +596,6 @@ elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
                 f"{msg_erro}"
             )
           else:
-            # Baixa definitiva da Oficina de Revestimento (sai do estoque geral)
             for _, row in itens_combo.iterrows():
               ins_id = row["ID_Insumo"]
               qtd_nec = row["Qtd_Utilizada"]
@@ -468,7 +618,6 @@ elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
                   restante_baixar -= saldo_lote
                   df.loc[idx, "Total Geral"] = 0.0
 
-              # Registra movimentação de saída definitiva por entrega do produto acabado
               nova_mov = pd.DataFrame([{
                   "Data/Hora": get_now_br(),
                   "ID": ins_id,
