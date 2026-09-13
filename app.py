@@ -5,27 +5,27 @@ import datetime
 st.set_page_config(page_title="BUILD STOCK BR", page_icon="📦", layout="wide")
 
 # ==========================================
-# CATÁLOGO BASE COMPLETO (17 ITENS)
+# BASE DE DADOS COMPLETA (17 ITENS OFICIAIS)
 # ==========================================
 if "cat" not in st.session_state:
     st.session_state.cat = pd.DataFrame([
         {"ID": "ID-1", "Material": "Cimento Lafarge Fondu", "Unidade": "KG"},
         {"ID": "ID-2", "Material": "Carbeto de Silicio", "Unidade": "KG"},
-        {"ID": "ID-3", "Material": "Argamassa Refratária Tecnofire 50S", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "Argamassa Refratária Tecnofire / Placibar", "Unidade": "KG"},
         {"ID": "ID-4", "Material": "Castibar Psi UG", "Unidade": "KG"},
-        {"ID": "ID-5", "Material": "Lã de Rocha Ibar Sem Corte", "Unidade": "UN"},
-        {"ID": "ID-6", "Material": "Tijolo Refratário Isolante", "Unidade": "UN"},
-        {"ID": "ID-7", "Material": "Concreto Refratário Denso", "Unidade": "KG"},
-        {"ID": "ID-8", "Material": "Manta de Fibra Cerâmica", "Unidade": "M2"},
-        {"ID": "ID-9", "Material": "Cola para Fibra Cerâmica", "Unidade": "KG"},
-        {"ID": "ID-10", "Material": "Aditivo Líquido", "Unidade": "L"},
-        {"ID": "ID-11", "Material": "Chapa de Aço Inox 310", "Unidade": "KG"},
-        {"ID": "ID-12", "Material": "Prisioneiro Cerâmico", "Unidade": "UN"},
-        {"ID": "ID-13", "Material": "Papel Cerâmico Isolante", "Unidade": "M2"},
-        {"ID": "ID-14", "Material": "Tubo de Alumina", "Unidade": "UN"},
-        {"ID": "ID-15", "Material": "Massa Calafetar Alta Temperatura", "Unidade": "KG"},
-        {"ID": "ID-16", "Material": "Pó de Grafite Industrial", "Unidade": "KG"},
-        {"ID": "ID-17", "Material": "Tela Metálica Galvanizada", "Unidade": "M2"}
+        {"ID": "ID-5", "Material": "Lã de Rocha Ibar", "Unidade": "UN"},
+        {"ID": "ID-6", "Material": "Tijolo Semi Isolante Supra", "Unidade": "UN"},
+        {"ID": "ID-7", "Material": "Tijolo Isolante Skamol / Mosconi", "Unidade": "UN"},
+        {"ID": "ID-8", "Material": "Tijolo Refratário Vários Tipos", "Unidade": "UN"},
+        {"ID": "ID-9", "Material": "Material Auxiliar / Outros", "Unidade": "KG"},
+        {"ID": "ID-10", "Material": "Aditivo / Diversos", "Unidade": "L"},
+        {"ID": "ID-11", "Material": "Chamote Ibar / TecFire", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria (Elken / Remendo / Carbon)", "Unidade": "KG"},
+        {"ID": "ID-13", "Material": "Material Auxiliar ID-13", "Unidade": "UN"},
+        {"ID": "ID-14", "Material": "Blocos Lateral Carbon", "Unidade": "CX"},
+        {"ID": "ID-15", "Material": "Blocos Engusados / Fundo", "Unidade": "UN"},
+        {"ID": "ID-16", "Material": "Barras Catódicas", "Unidade": "UN"},
+        {"ID": "ID-17", "Material": "Blocos de Fundo Sec", "Unidade": "UN"}
     ])
 
 cat = st.session_state.cat
@@ -97,10 +97,8 @@ elif menu == "Movimentações (Entrada/Saída)":
     cat["Label"] = cat["ID"] + " — " + cat["Material"]
     
     with st.form("form_mov"):
-        # Linha corrigida com a variável 'cat' devidamente carregada
         id_e = st.selectbox("SELECIONE O ID DO MATERIAL", sorted(cat["ID"].unique()), key="id_e")
         
-        # Filtra o nome correspondente ao ID selecionado
         mat_correspondente = cat[cat["ID"] == id_e]["Material"].values[0]
         st.write(f"**Material Selecionado:** {mat_correspondente}")
         
