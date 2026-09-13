@@ -20,10 +20,10 @@ def get_now_br():
 
 
 # Arquivos de Persistência Local (CSV)
-ESTOQUE_FILE = "build_stock_estoque_v9.csv"
-MOV_FILE = "build_stock_movimentacoes_v9.csv"
-PERMISSOES_FILE = "build_stock_permissoes_v9.csv"
-COMBO_FILE = "build_stock_combos_v9.csv"
+ESTOQUE_FILE = "build_stock_estoque_v10.csv"
+MOV_FILE = "build_stock_movimentacoes_v10.csv"
+PERMISSOES_FILE = "build_stock_permissoes_v10.csv"
+COMBO_FILE = "build_stock_combos_v10.csv"
 
 areas_reais = [
     "🏭 Galpão de Materiais Refratários",
@@ -32,7 +32,7 @@ areas_reais = [
 ]
 
 
-# CARGA INICIAL PRÉ-CADASTRADA (LTC COMPLETA - 02/07/2026)
+# CARGA INICIAL COM ESTOQUE ZERADO (APENAS PARA BASE DE ESTRUTURA)
 def criar_carga_inicial_ltc():
   dados_iniciais = [
       {
@@ -43,13 +43,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2025-07-09",
           "Validade": "2026-07-09",
           "Área": areas_reais[0],
-          "Qtd Externa": 8.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1400.0,
           "Unidade Final": "KG",
-          "Total Geral": 11200.0,
+          "Total Geral": 0.0,
       },
       {
           "ID": "ID-1",
@@ -59,13 +59,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2025-07-09",
           "Validade": "2026-07-09",
           "Área": areas_reais[0],
-          "Qtd Externa": 7.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 375.0,
           "Unidade Final": "KG",
-          "Total Geral": 2625.0,
+          "Total Geral": 0.0,
       },
       {
           "ID": "ID-2",
@@ -75,13 +75,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 4.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1000.0,
           "Unidade Final": "KG",
-          "Total Geral": 4000.0,
+          "Total Geral": 0.0,
       },
       {
           "ID": "ID-3",
@@ -91,13 +91,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 7.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1200.0,
           "Unidade Final": "KG",
-          "Total Geral": 8400.0,
+          "Total Geral": 0.0,
       },
       {
           "ID": "ID-3",
@@ -107,45 +107,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 400.0,
           "Unidade Final": "KG",
-          "Total Geral": 400.0,
-      },
-      {
-          "ID": "ID-3",
-          "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
-          "Marca": "PLACIBAR",
-          "Lote": "LOTE-3C",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 4.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "Saco",
-          "Medida por Interna": 1250.0,
-          "Unidade Final": "KG",
-          "Total Geral": 5000.0,
-      },
-      {
-          "ID": "ID-3",
-          "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
-          "Marca": "PLACIBAR",
-          "Lote": "LOTE-3D",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "Saco",
-          "Medida por Interna": 1000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 1000.0,
+          "Total Geral": 0.0,
       },
       {
           "ID": "ID-4",
@@ -155,29 +123,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 4.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1250.0,
           "Unidade Final": "KG",
-          "Total Geral": 5000.0,
-      },
-      {
-          "ID": "ID-4",
-          "Descrição": "CASTIBAR PSI UG",
-          "Marca": "CASTIBAR",
-          "Lote": "LOTE-4B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 4.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "Saco",
-          "Medida por Interna": 1000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 4000.0,
+          "Total Geral": 0.0,
       },
       {
           "ID": "ID-5",
@@ -187,525 +139,13 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
+          "Qtd Externa": 0.0,
           "Emb Externa": "Caixa",
           "Qtd Interna por Externa": 6.0,
           "Emb Interna": "PACOTE",
           "Medida por Interna": 1.0,
           "Unidade Final": "UN",
-          "Total Geral": 6.0,
-      },
-      {
-          "ID": "ID-5",
-          "Descrição": "LÃ DE ROCHA IBAR CORTADO",
-          "Marca": "IBAR",
-          "Lote": "LOTE-5B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Caixa",
-          "Qtd Interna por Externa": 94.0,
-          "Emb Interna": "PACOTE",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 94.0,
-      },
-      {
-          "ID": "ID-6",
-          "Descrição": "TIJOLO SEMI ISOLANTE SUPRA SKAMOL ALUPOROS- 912",
-          "Marca": "SKAMOL",
-          "Lote": "LOTE-6A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 3.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 3.0,
-      },
-      {
-          "ID": "ID-6",
-          "Descrição": "TIJOLO SEMI ISOLANTE SUPRA MOSCONI AB70- 1020",
-          "Marca": "MOSCONI",
-          "Lote": "LOTE-6B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 31.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1020.0,
-          "Unidade Final": "UN",
-          "Total Geral": 31620.0,
-      },
-      {
-          "ID": "ID-7",
-          "Descrição": "TIJOLO ISOLANTE SKAMOL ALUPOROS 912",
-          "Marca": "SKAMOL",
-          "Lote": "LOTE-7A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 100.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 100.0,
-      },
-      {
-          "ID": "ID-7",
-          "Descrição": "TIJOLO ISOLANTE MOSCONI AB 55-680",
-          "Marca": "MOSCONI",
-          "Lote": "LOTE-7B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 256.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 680.0,
-          "Unidade Final": "UN",
-          "Total Geral": 174080.0,
-      },
-      {
-          "ID": "ID-8",
-          "Descrição": "SA ALUM 512",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-8A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 290.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 290.0,
-      },
-      {
-          "ID": "ID-8",
-          "Descrição": "TIJOLOS REFRATÁRIOS VESUVIUS (PERU) 336",
-          "Marca": "VESUVIUS",
-          "Lote": "LOTE-8B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 13.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 336.0,
-          "Unidade Final": "UN",
-          "Total Geral": 4368.0,
-      },
-      {
-          "ID": "ID-8",
-          "Descrição": "TIJOLO REFRATÁRIO VESUVIUS 416 (CHINA)",
-          "Marca": "VESUVIUS",
-          "Lote": "LOTE-8C",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 9.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 416.0,
-          "Unidade Final": "UN",
-          "Total Geral": 3744.0,
-      },
-      {
-          "ID": "ID-8",
-          "Descrição": "TIJOLO REFRATÁRIO VESUVIUS 296 (CHINA)",
-          "Marca": "VESUVIUS",
-          "Lote": "LOTE-8D",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Palete",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 294.0,
-          "Unidade Final": "UN",
-          "Total Geral": 294.0,
-      },
-      {
-          "ID": "ID-11",
-          "Descrição": "CHAMOTE IBAR",
-          "Marca": "IBAR",
-          "Lote": "LOTE-11A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Granel",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 18000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 18000.0,
-      },
-      {
-          "ID": "ID-11",
-          "Descrição": "CHAMOTE TECFIRE",
-          "Marca": "TECFIRE",
-          "Lote": "LOTE-11B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Granel",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 26000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 26000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA ELKEN T30- REMENDO",
-          "Marca": "ELKEN",
-          "Lote": "74630_74631",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 1000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 1000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA REMENDO MULTIPLOS",
-          "Marca": "ELKEN",
-          "Lote": "75074-75087",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 4000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 4000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA",
-          "Marca": "ELKEN",
-          "Lote": "75949_75952",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 10000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 10000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA",
-          "Marca": "ELKEN",
-          "Lote": "76007_76010",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 10000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 10000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA ELKEN",
-          "Marca": "ELKEN",
-          "Lote": "76323_76328",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 24000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 24000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA ELKEN",
-          "Marca": "ELKEN",
-          "Lote": "76069_76086",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 9000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 9000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA FRIA ELKEN",
-          "Marca": "ELKEN",
-          "Lote": "76030-76067",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 1000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 1000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA CARBON",
-          "Marca": "CARBON",
-          "Lote": "759",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 9000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 9000.0,
-      },
-      {
-          "ID": "ID-12",
-          "Descrição": "PASTA CARBON",
-          "Marca": "CARBON",
-          "Lote": "763",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "Tambor",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "KG",
-          "Medida por Interna": 21000.0,
-          "Unidade Final": "KG",
-          "Total Geral": 21000.0,
-      },
-      {
-          "ID": "ID-14",
-          "Descrição": "BLOCOS LATERAL CARBON",
-          "Marca": "CARBON",
-          "Lote": "LOTE-14",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 73.0,
-          "Emb Externa": "CX",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "CX",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 73.0,
-      },
-      {
-          "ID": "ID-15",
-          "Descrição": "BLOCOS ENGUSADOS SEC=135",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-15A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[2],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 1.0,
-      },
-      {
-          "ID": "ID-15",
-          "Descrição": "BARRACAO BLOCOS ENGUSADOS SEC",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-15B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "RESTO",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 1.0,
-      },
-      {
-          "ID": "ID-15",
-          "Descrição": "BLOCO DE FUNDO ENERGOPRON",
-          "Marca": "ENERGOPRON",
-          "Lote": "LOTE-15C",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "RESTO",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 1.0,
-      },
-      {
-          "ID": "ID-15",
-          "Descrição": "BLOCOS DE FUNDO TOKAYCOBEX",
-          "Marca": "TOKAYCOBEX",
-          "Lote": "LOTE-15D",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 2.0,
-          "Emb Externa": "RESTO",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 2.0,
-      },
-      {
-          "ID": "ID-16",
-          "Descrição": "BARRAS CATÓDICAS / ITENS 16",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-16A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[2],
-          "Qtd Externa": 24.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 24.0,
-      },
-      {
-          "ID": "ID-16",
-          "Descrição": "BARRAS CATÓDICAS / ITENS 16",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-16B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 680.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 680.0,
-      },
-      {
-          "ID": "ID-16",
-          "Descrição": "BARRAS CATÓDICAS TESTE",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-16C",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 9.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 9.0,
-      },
-      {
-          "ID": "ID-16",
-          "Descrição": "BARRAS CATÓDICAS TESTE",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-16D",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 113.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 113.0,
-      },
-      {
-          "ID": "ID-17",
-          "Descrição": "BLOCOS DE FUNDO SEC",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-17A",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 402.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 402.0,
-      },
-      {
-          "ID": "ID-17",
-          "Descrição": "BLOCOS DE FUNDO TOKAYCOBEX",
-          "Marca": "TOKAYCOBEX",
-          "Lote": "LOTE-17B",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[0],
-          "Qtd Externa": 1.0,
-          "Emb Externa": "RESTO",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 1.0,
-      },
-      {
-          "ID": "ID-17",
-          "Descrição": "BLOCOS SEC",
-          "Marca": "PADRÃO",
-          "Lote": "LOTE-17C",
-          "Fabricação": "2026-01-01",
-          "Validade": "2027-01-01",
-          "Área": areas_reais[2],
-          "Qtd Externa": 25.0,
-          "Emb Externa": "UN",
-          "Qtd Interna por Externa": 1.0,
-          "Emb Interna": "UN",
-          "Medida por Interna": 1.0,
-          "Unidade Final": "UN",
-          "Total Geral": 25.0,
+          "Total Geral": 0.0,
       },
   ]
   return pd.DataFrame(dados_iniciais)
@@ -794,7 +234,7 @@ menu = [
     "⚡ Baixa por Entrega / Produção (7 Caracteres)",
     "🔄 Movimentações Cruzadas",
 ]
-escolha = st.sidebar.scol = st.sidebar.selectbox("🧭 Navegação", menu)
+escolha = st.sidebar.selectbox("🧭 Navegação", menu)
 
 df = st.session_state.estoque_df
 mov_df = st.session_state.mov_df
@@ -818,145 +258,183 @@ if escolha == "📋 Painel & Soma Geral":
 
 elif escolha == "📊 Visão por ID, Locais, Gráficos & Histórico":
   st.subheader(
-      "📊 Consulta Detalhada por ID: Locais, Gráficos e Histórico Periódico"
+      "📊 Consulta Dinâmica: Seleção Múltipla de IDs, Gráficos Horizontais &"
+      " Histórico"
   )
 
   if df.empty:
     st.info("Nenhum dado cadastrado.")
   else:
     lista_ids = sorted(df["ID"].unique())
-    id_selecionado = st.selectbox(
-        "🔍 Selecione o ID do Material",
+
+    st.markdown("### 🔍 Selecione as IDs para Exibir no Gráfico e Relatório")
+    ids_selecionadas = st.multiselect(
+        "Escolha uma ou mais IDs:",
         lista_ids,
         format_func=lambda x: f"{x} — {df[df['ID'] == x]['Descrição'].iloc[0]}",
     )
 
-    df_id_estoque = df[df["ID"] == id_selecionado]
-    desc_material = df_id_estoque["Descrição"].iloc[0]
-    unidade_mat = df_id_estoque["Unidade Final"].iloc[0]
-
-    st.markdown(
-        f"### 🏷️ Detalhes do ID: **{id_selecionado}** — *{desc_material}*"
-    )
-
-    # 1. O QUE TEM EM CADA LOCAL
-    st.markdown("#### 🏢 Saldo Atual Separado por Local (Área e Marca)")
-    estoque_por_local = (
-        df_id_estoque.groupby(["Área", "Marca", "Lote", "Unidade Final"])[
-            "Total Geral"
-        ]
-        .sum()
-        .reset_index()
-    )
-    if not estoque_por_local.empty:
-      st.dataframe(estoque_por_local, use_container_width=True)
-    else:
-      st.info("Nenhum saldo registrado para este ID.")
-
-    st.markdown("---")
-
-    # 2. GRÁFICOS DO ID POR LOCAL
-    st.markdown("#### 📊 Gráfico de Distribuição por Local")
-    if not estoque_por_local.empty:
-      chart_data = (
-          estoque_por_local.groupby("Área")["Total Geral"].sum().reset_index()
+    if not ids_selecionadas:
+      st.info(
+          "👆 Selecione ao menos uma ID acima para carregar os gráficos e os"
+          " dados detalhados."
       )
-      st.bar_chart(chart_data, x="Área", y="Total Geral")
-
-    st.markdown("---")
-
-    # 3. HISTÓRICO DIÁRIO, SEMANAL, MENSAL E ANUAL
-    st.markdown(
-        "#### 🕒 Histórico de Entradas e Saídas (Diário, Semanal, Mensal, Anual)"
-    )
-
-    if mov_df.empty:
-      st.info("Nenhuma movimentação registrada no sistema.")
     else:
-      mov_id = mov_df[mov_df["ID"] == id_selecionado].copy()
+      df_ids_estoque = df[df["ID"].isin(ids_selecionadas)]
 
-      if mov_id.empty:
-        st.info(f"Nenhuma movimentação registrada para o ID {id_selecionado}.")
+      st.markdown("---")
+      st.markdown(
+          "### 📊 Gráfico de Barras Horizontal: Saldo por ID, Marca e Lote"
+      )
+
+      if not df_ids_estoque.empty:
+        df_ids_estoque["ID_Marca_Lote_Area"] = (
+            "["
+            + df_ids_estoque["ID"]
+            + "] "
+            + df_ids_estoque["Marca"]
+            + " | Lote: "
+            + df_ids_estoque["Lote"]
+            + " ("
+            + df_ids_estoque["Área"]
+            + ")"
+        )
+
+        import altair as alt
+
+        chart_data = (
+            df_ids_estoque.groupby("ID_Marca_Lote_Area")["Total Geral"]
+            .sum()
+            .reset_index()
+        )
+
+        alt_chart = (
+            alt.Chart(chart_data)
+            .mark_bar(color="#1f77b4", cornerRadiusEnd=4)
+            .encode(
+                x=alt.X(
+                    "Total Geral:Q", title="Saldo Total (Unidade do Material)"
+                ),
+                y=alt.Y(
+                    "ID_Marca_Lote_Area:N",
+                    sort="-x",
+                    title="ID, Marca, Lote & Área",
+                ),
+                tooltip=["ID_Marca_Lote_Area", "Total Geral"],
+            )
+            .properties(height=300)
+        )
+
+        st.altair_chart(alt_chart, use_container_width=True)
+        st.caption(
+            "💡 *Este gráfico de barras horizontal exibe de forma clara e"
+            " lúdica o saldo separado por Marca, Lote e Área para todas as IDs"
+            " selecionadas.*"
+        )
+
+      st.markdown("---")
+
+      # MÉTRICAS DE SALDO GERAL POR ID SELECIONADA
+      st.markdown("### 🌟 Saldo Geral Consolidado por ID")
+      cols_metricas = st.columns(min(len(ids_selecionadas), 4))
+      for i, id_sel in enumerate(ids_selecionadas):
+        df_um_id = df_ids_estoque[df_ids_estoque["ID"] == id_sel]
+        desc_mat = df_um_id["Descrição"].iloc[0]
+        unidade_mat = df_um_id["Unidade Final"].iloc[0]
+        saldo_total_id = df_um_id["Total Geral"].sum()
+
+        with cols_metricas[i % len(cols_metricas)]:
+          st.metric(
+              label=f"ID: {id_sel} ({unidade_mat})",
+              value=f"{saldo_total_id:,.2f}",
+              delta=desc_mat,
+          )
+
+      st.markdown("---")
+
+      # TABELA DETALHADA
+      crypto_detalhe = (
+          df_ids_estoque.groupby(
+              ["ID", "Descrição", "Área", "Marca", "Lote", "Unidade Final"]
+          )["Total Geral"]
+          .sum()
+          .reset_index()
+      )
+      st.markdown("### 🏢 Estoque Detalhado das IDs Selecionadas")
+      st.dataframe(crypto_detalhe, use_container_width=True)
+
+      st.markdown("---")
+
+      # HISTÓRICO DE MOVIMENTAÇÕES PARA AS IDS SELECIONADAS
+      st.markdown("### 🕒 Histórico de Movimentações das IDs Selecionadas")
+      if mov_df.empty:
+        st.info("Nenhuma movimentação registrada no sistema.")
       else:
-        mov_id["Data/Hora_dt"] = pd.to_datetime(
-            mov_id["Data/Hora"], errors="coerce"
-        )
-        agora = datetime.now(BR_TZ)
+        mov_ids = mov_df[mov_df["ID"].isin(ids_selecionadas)].copy()
 
-        periodo_filtro = st.selectbox(
-            "📅 Selecione o Período do Histórico",
-            [
-                "Todos os Registros",
-                "Diário (Últimas 24 Horas)",
-                "Semanal (Últimos 7 Dias)",
-                "Mensal (Últimos 30 Dias)",
-                "Anual (Último Ano)",
-            ],
-        )
-
-        if periodo_filtro == "Diário (Últimas 24 Horas)":
-          limite_data = agora - timedelta(days=1)
-          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
-        elif periodo_filtro == "Semanal (Últimos 7 Dias)":
-          limite_data = agora - timedelta(days=7)
-          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
-        elif periodo_filtro == "Mensal (Últimos 30 Dias)":
-          limite_data = agora - timedelta(days=30)
-          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
-        elif periodo_filtro == "Anual (Último Ano)":
-          limite_data = agora - timedelta(days=365)
-          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
-
-        if mov_id.empty:
-          st.warning(
-              f"Nenhuma movimentação encontrada para o período selecionado ("
-              f"{periodo_filtro})."
+        if mov_ids.empty:
+          st.info(
+              "Nenhuma movimentação registrada para as IDs selecionadas."
           )
         else:
-          colunas_exibir = [
-              "Data/Hora",
-              "Tipo",
-              "Marca",
-              "Lote",
-              "Quantidade",
-              "Origem",
-              "Destino",
-              "Responsável",
-          ]
-          mov_id_exibir = mov_id[colunas_exibir].sort_values(
-              by="Data/Hora", ascending=False
+          mov_ids["Data/Hora_dt"] = pd.to_datetime(
+              mov_ids["Data/Hora"], errors="coerce"
+          )
+          agora = datetime.now(BR_TZ)
+
+          periodo_filtro = st.selectbox(
+              "📅 Selecione o Período do Histórico",
+              [
+                  "Todos os Registros",
+                  "Diário (Últimas 24 Horas)",
+                  "Semanal (Últimos 7 Dias)",
+                  "Mensal (Últimos 30 Dias)",
+                  "Anual (Último Ano)",
+              ],
           )
 
-          st.dataframe(mov_id_exibir, use_container_width=True)
+          if periodo_filtro == "Diário (Últimas 24 Horas)":
+            limite_data = agora - timedelta(days=1)
+            mov_ids = mov_ids[mov_ids["Data/Hora_dt"] >= limite_data]
+          elif periodo_filtro == "Semanal (Últimos 7 Dias)":
+            limite_data = agora - timedelta(days=7)
+            mov_ids = mov_ids[mov_ids["Data/Hora_dt"] >= limite_data]
+          elif periodo_filtro == "Mensal (Últimos 30 Dias)":
+            limite_data = agora - timedelta(days=30)
+            mov_ids = mov_ids[mov_ids["Data/Hora_dt"] >= limite_data]
+          elif periodo_filtro == "Anual (Último Ano)":
+            limite_data = agora - timedelta(days=365)
+            mov_ids = mov_ids[mov_ids["Data/Hora_dt"] >= limite_data]
 
-          entradas_totais = mov_id[
-              mov_id["Tipo"].str.contains(
-                  "Entrada|Devolução", case=False, na=False
-              )
-          ]["Quantidade"].sum()
-          saidas_totais = mov_id[
-              mov_id["Tipo"].str.contains("Saída|Entrega", case=False, na=False)
-          ]["Quantidade"].sum()
-
-          c_m1, c_m2 = st.columns(2)
-          with c_m1:
-            st.metric(
-                f"📥 Total Entradas ({periodo_filtro})",
-                f"{entradas_totais:,.2f} {unidade_mat}",
+          if mov_ids.empty:
+            st.warning(
+                "Nenhuma movimentação encontrada para o período selecionado."
             )
-          with c_m2:
-            st.metric(
-                f"📤 Total Saídas ({periodo_filtro})",
-                f"{saidas_totais:,.2f} {unidade_mat}",
+          else:
+            colunas_exibir = [
+                "Data/Hora",
+                "ID",
+                "Tipo",
+                "Marca",
+                "Lote",
+                "Quantidade",
+                "Origem",
+                "Destino",
+                "Responsável",
+            ]
+            mov_ids_exibir = mov_ids[colunas_exibir].sort_values(
+                by="Data/Hora", ascending=False
             )
 
-          csv_hist = mov_id_exibir.to_csv(index=False).encode("utf-8")
-          st.download_button(
-              label=f"📥 Baixar Histórico de {id_selecionado} (CSV)",
-              data=csv_hist,
-              file_name=f"historico_{id_selecionado}.csv",
-              mime="text/csv",
-          )
+            st.dataframe(mov_ids_exibir, use_container_width=True)
+
+            csv_hist = mov_ids_exibir.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📥 Baixar Histórico Filtrado (CSV)",
+                data=csv_hist,
+                file_name="historico_ids_selecionadas.csv",
+                mime="text/csv",
+            )
 
 elif escolha == "⚙️ Habilitar / Desabilitar IDs por Área":
   st.subheader("⚙️ Controle de Visibilidade e Ativação de IDs por Área")
@@ -993,7 +471,6 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
       id_prod = st.text_input("🔖 ID Rastreador / Código (Ex: ID-18) *")
       descricao = st.text_input("📝 Descrição do Material *")
     with c2:
-      # CAMPO DE MARCA EDITÁVEL E LIVRE
       marca = st.text_input("🏷️ Marca / Fabricante (Editável) *", value="PADRÃO")
       lote = st.text_input("📦 Número do Lote *")
     with c3:
@@ -1004,7 +481,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
 
     c4, c5, c6, c7 = st.columns(4)
     with c4:
-      qtd_ext = st.number_input("Qtd Externa", min_value=0.1, value=1.0)
+      qtd_ext = st.number_input("Qtd Externa", min_value=0.0, value=0.0)
     with c5:
       emb_ext = st.selectbox(
           "Tipo Emb Externa", ["Palete", "Caixa", "Fardo", "Tambor", "UN"]
@@ -1057,21 +534,22 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
         for ar in areas_reais:
           garantir_permissao(id_prod.upper(), ar)
 
-        nova_mov = pd.DataFrame([{
-            "Data/Hora": get_now_br(),
-            "ID": id_prod.upper(),
-            "Descrição": descricao.upper(),
-            "Marca": marca.upper(),
-            "Lote": lote.upper(),
-            "Tipo": "📥 Entrada Inicial (Galpão)",
-            "Quantidade": total_calculado,
-            "Origem": "Fornecedor Externo",
-            "Destino": galpao_nome,
-            "Responsável": "Almoxarife",
-        }])
-        st.session_state.mov_df = pd.concat(
-            [mov_df, nova_mov], ignore_index=True
-        )
+        if total_calculado > 0:
+          nova_mov = pd.DataFrame([{
+              "Data/Hora": get_now_br(),
+              "ID": id_prod.upper(),
+              "Descrição": descricao.upper(),
+              "Marca": marca.upper(),
+              "Lote": lote.upper(),
+              "Tipo": "📥 Entrada Inicial (Galpão)",
+              "Quantidade": total_calculado,
+              "Origem": "Fornecedor Externo",
+              "Destino": galpao_nome,
+              "Responsável": "Almoxarife",
+          }])
+          st.session_state.mov_df = pd.concat(
+              [mov_df, nova_mov], ignore_index=True
+          )
 
         salvar_dados()
         st.success(
@@ -1214,7 +692,6 @@ elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
                   restante_baixar -= saldo_lote
                   df.loc[idx, "Total Geral"] = 0.0
 
-              # Pega a primeira marca disponível para o registro histórico
               marca_reg = (
                   df[df["ID"] == ins_id]["Marca"].iloc[0]
                   if not df[df["ID"] == ins_id].empty
@@ -1273,7 +750,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
     if df_disponivel.empty:
       st.warning(f"Nenhum ID habilitado na área **{area_operacao}**.")
     else:
-      # SELEÇÃO DETALHADA INCLUINDO MARCA E LOTE (PARA CASOS COM MÚLTIPLAS MARCAS)
       df_disponivel["Opcao_Combo"] = (
           df_disponivel["ID"]
           + " — "
@@ -1291,7 +767,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
           df_disponivel["Opcao_Combo"].unique(),
       )
 
-      # Extração precisa dos dados selecionados
       id_sel = item_op.split(" — ")[0]
       marca_sel = item_op.split(" | Marca: ")[1].split(" | Lote: ")[0]
       lote_sel = item_op.split(" | Lote: ")[1].split(" | Saldo: ")[0]
@@ -1368,7 +843,7 @@ elif escolha == "🔄 Movimentações Cruzadas":
           destino_reg = area_operacao
         else:
           df.loc[idx_origem, "Total Geral"] += qtd_mov
-          tipo_hist = "↩️ Devolução"
+          type_hist = "↩️ Devolução"
           destino_reg = area_operacao
 
         st.session_state.estoque_df = df
