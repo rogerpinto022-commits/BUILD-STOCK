@@ -1,207 +1,153 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date, timedelta
-import plotly.express as px
-import os
-import pytz
+import datetime
 
-# FUSO BRASÍLIA
-BR_TZ = pytz.timezone("America/Sao_Paulo")
-def agora_br():
-    return datetime.now(BR_TZ)
+st.set_page_config(page_title="BUILD STOCK BR", page_icon="📦", layout="wide")
 
-st.set_page_config(page_title="BUILD STOCK BR", layout="wide", page_icon="📦")
-st.title(f"📦 BUILD STOCK - BRASÍLIA | {agora_br().strftime('%d/%m/%Y %H:%M:%S')}")
-
-AREAS_REAIS = ["GALPÃO DE MATERIAIS REFRATÁRIOS", "SALA ANEXA", "OFICINA DE REVESTIMENTO"]
-CAT_FILE = "catalogo_padrao.csv"
-MOV_FILE = "movimentacoes.csv"
-
-# BASE PADRÃO COM CONTROLE INDIVIDUAL DE HABILITAÇÃO POR ÁREA
-def criar_catalogo_padrao():
-    dados_padrao = [
-        {"ID": "ID-1", "Material": "CIMENTO LAFARGE FONDU", "Marca": "LAFARGE", "Unidade": "KG", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": True},
-        {"ID": "ID-2", "Material": "CARBETO DE SILICIO", "Marca": "PADRÃO", "Unidade": "KG", "HAB_GALPAO": True, "HAB_SALA_ANEXA": False, "HAB_OFICINA": True},
-        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S", "Marca": "TECNOFIRE", "Unidade": "KG", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": True},
-        {"ID": "ID-4", "Material": "CASTIBAR PSI UG", "Marca": "CASTIBAR", "Unidade": "KG", "HAB_GALPAO": True, "HAB_SALA_ANEXA": False, "HAB_OFICINA": True},
-        {"ID": "ID-5", "Material": "LÃ DE ROCHA IBAR", "Marca": "IBAR", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": False},
-        {"ID": "ID-6", "Material": "TIJOLO SEMI ISOLANTE SUPRA", "Marca": "SKAMOL", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": True},
-        {"ID": "ID-7", "Material": "TIJOLO ISOLANTE SKAMOL", "Marca": "SKAMOL", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": False},
-        {"ID": "ID-8", "Material": "TIJOLOS REFRATÁRIOS VESUVIUS", "Marca": "VESUVIUS", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": False, "HAB_OFICINA": True},
-        {"ID": "ID-11", "Material": "CHAMOTE IBAR / TECFIRE", "Marca": "IBAR", "Unidade": "KG", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": True},
-        {"ID": "ID-12", "Material": "PASTA FRIA / CARBON", "Marca": "ELKEN", "Unidade": "KG", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": False},
-        {"ID": "ID-14", "Material": "BLOCOS LATERAL CARBON", "Marca": "CARBON", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": False, "HAB_OFICINA": True},
-        {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS / FUNDO", "Marca": "PADRÃO", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": True},
-        {"ID": "ID-16", "Material": "BARRAS CATÓDICAS", "Marca": "PADRÃO", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": True, "HAB_OFICINA": False},
-        {"ID": "ID-17", "Material": "BLOCOS DE FUNDO SEC", "Marca": "PADRÃO", "Unidade": "UN", "HAB_GALPAO": True, "HAB_SALA_ANEXA": False, "HAB_OFICINA": True},
-    ]
-    return pd.DataFrame(dados_padrao)
-
-def carregar():
-    cat = pd.read_csv(CAT_FILE) if os.path.exists(CAT_FILE) else criar_catalogo_padrao()
-    for col in ["HAB_GALPAO", "HAB_SALA_ANEXA", "HAB_OFICINA"]:
-        if col not in cat.columns:
-            cat[col] = True
-    mov = pd.read_csv(MOV_FILE) if os.path.exists(MOV_FILE) else pd.DataFrame(columns=[
-        "ID","Material","Marca","Lote","Fabricacao","Vencimento",
-        "Unidade","Qtd_Externa","Qtd_Interna_Total","Medida_Total",
-        "Area_Origem","Area_Destino","Mov_Tipo","Data_Hora_BR","Status"
+# ==========================================
+# CATÁLOGO BASE COMPLETO (17 ITENS)
+# ==========================================
+if "cat" not in st.session_state:
+    st.session_state.cat = pd.DataFrame([
+        {"ID": "ID-1", "Material": "Cimento Lafarge Fondu", "Unidade": "KG"},
+        {"ID": "ID-2", "Material": "Carbeto de Silicio", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "Argamassa Refratária Tecnofire 50S", "Unidade": "KG"},
+        {"ID": "ID-4", "Material": "Castibar Psi UG", "Unidade": "KG"},
+        {"ID": "ID-5", "Material": "Lã de Rocha Ibar Sem Corte", "Unidade": "UN"},
+        {"ID": "ID-6", "Material": "Tijolo Refratário Isolante", "Unidade": "UN"},
+        {"ID": "ID-7", "Material": "Concreto Refratário Denso", "Unidade": "KG"},
+        {"ID": "ID-8", "Material": "Manta de Fibra Cerâmica", "Unidade": "M2"},
+        {"ID": "ID-9", "Material": "Cola para Fibra Cerâmica", "Unidade": "KG"},
+        {"ID": "ID-10", "Material": "Aditivo Líquido", "Unidade": "L"},
+        {"ID": "ID-11", "Material": "Chapa de Aço Inox 310", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Prisioneiro Cerâmico", "Unidade": "UN"},
+        {"ID": "ID-13", "Material": "Papel Cerâmico Isolante", "Unidade": "M2"},
+        {"ID": "ID-14", "Material": "Tubo de Alumina", "Unidade": "UN"},
+        {"ID": "ID-15", "Material": "Massa Calafetar Alta Temperatura", "Unidade": "KG"},
+        {"ID": "ID-16", "Material": "Pó de Grafite Industrial", "Unidade": "KG"},
+        {"ID": "ID-17", "Material": "Tela Metálica Galvanizada", "Unidade": "M2"}
     ])
-    return cat, mov
 
-def salvar():
-    st.session_state.catalogo.to_csv(CAT_FILE, index=False)
-    st.session_state.mov.to_csv(MOV_FILE, index=False)
+cat = st.session_state.cat
 
-if "catalogo" not in st.session_state:
-    c, m = carregar()
-    st.session_state.catalogo = c
-    st.session_state.mov = m
+if "movimentacoes" not in st.session_state:
+    st.session_state.movimentacoes = pd.DataFrame(columns=[
+        "Data", "ID", "Material", "Tipo", "Quantidade", "Marca", "Lote", "Área", "Responsável"
+    ])
 
-cat = st.session_state.catalogo
-mov = st.session_state.mov
+# ==========================================
+# INTERFACE PRINCIPAL
+# ==========================================
+st.title("📦 BUILD STOCK BR — Gestão Industrial Avançada por ID e Local")
 
-def get_p(id_b):
-    if cat.empty: return None
-    r = cat[cat["ID"]==id_b]
-    return r.iloc[0] if not r.empty else None
+menu = st.sidebar.selectbox("Navegação", [
+    "Consulta Dinâmica e Gráficos", 
+    "Movimentações (Entrada/Saída)", 
+    "Cadastro Base de Itens"
+])
 
-def get_fifo(id_r, area):
-    if cat.empty: return None
-    if mov.empty: return get_p(id_r)
-    est = mov.groupby(["ID","Lote","Fabricacao","Area_Destino"]).agg(Saldo=("Qtd_Externa","sum")).reset_index()
-    est = est[(est["ID"]==id_r) & (est["Area_Destino"]==area) & (est["Saldo"]>0)].sort_values("Fabricacao")
-    if not est.empty:
-        lote = est.iloc[0]["Lote"]
-        fab_lote = est.iloc[0]["Fabricacao"]
-        return {"Lote": lote, "Fabricacao": fab_lote, **get_p(id_r).to_dict()}
-    return get_p(id_r)
-
-tab_cad, tab_mov, tab_est, tab_graf = st.tabs(["🆕 BASE / CATÁLOGO & HABILITAÇÃO", "🔄 MOVIMENTAÇÕES & ENTRADAS", "📋 ESTOQUE", "📊 GRÁFICOS"])
-
-with tab_cad:
-    st.subheader("📋 Catálogo Geral e Painel de Habilitação por Local")
-    st.write("Marque ou desmarque nas colunas abaixo para **habilitar ou desabilitar** cada material para o respectivo local. O catálogo aparece integralmente para consulta.")
+# 1. CONSULTA DINÂMICA
+if menu == "Consulta Dinâmica e Gráficos":
+    st.header("📊 Consulta Dinâmica: Seleção Múltipla de IDs, Gráficos & Histórico")
     
-    # Tabela interativa para marcar/desmarcar
-    edited_cat = st.data_editor(cat, num_rows="dynamic", use_container_width=True, key="editor_habilita")
-    if st.button("💾 SALVAR CONFIGURAÇÃO DE HABILITAÇÃO", type="primary"):
-        st.session_state.catalogo = edited_cat
-        salvar()
-        st.success("Configurações de habilitação salvas com sucesso!")
-        st.rerun()
+    cat["Label"] = cat["ID"] + " — " + cat["Material"].str.upper()
+    
+    ids_selecionados = st.multiselect(
+        "Selecione as IDs para Exibir no Gráfico e Relatório",
+        options=cat["Label"].tolist(),
+        default=cat["Label"].tolist()
+    )
+    
+    ids_filtrados = [item.split(" — ")[0] for item in ids_selecionados]
+    
+    st.subheader("🌟 Saldo Geral Consolidado por ID")
+    if ids_filtrados:
+        cols = st.columns(min(len(ids_filtrados), 4) if len(ids_filtrados) > 0 else 1)
+        for idx, item_id in enumerate(ids_filtrados):
+            row = cat[cat["ID"] == item_id].iloc[0]
+            
+            df_mov = st.session_state.movimentacoes
+            saldo = 0.0
+            if not df_mov.empty and item_id in df_mov["ID"].values:
+                df_item = df_mov[df_mov["ID"] == item_id]
+                entradas = df_item[df_item["Tipo"] == "Entrada"]["Quantidade"].sum()
+                saidas = df_item[df_item["Tipo"] == "Saída"]["Quantidade"].sum()
+                saldo = entradas - saidas
 
-with tab_mov:
-    if cat.empty: st.warning("Cadastre a base de materiais.")
+            with cols[idx % len(cols)]:
+                st.metric(
+                    label=f"{row['ID']} ({row['Unidade']})", 
+                    value=f"{saldo:.2f}", 
+                    delta=row['Material']
+                )
     else:
-        st.subheader("📥 1. Registro de Entrada (Galpão de Materiais Refratários - Estoque Geral)")
+        st.info("Selecione ao menos uma ID acima para visualizar os dados.")
+
+    st.subheader("🕒 Histórico de Movimentações das IDs Selecionadas")
+    if not st.session_state.movimentacoes.empty and ids_filtrados:
+        df_mov_filt = st.session_state.movimentacoes[st.session_state.movimentacoes["ID"].isin(ids_filtrados)]
+        st.dataframe(df_mov_filt, use_container_width=True)
+    else:
+        st.info("Nenhuma movimentação registrada no sistema para os itens selecionados.")
+
+# 2. MOVIMENTAÇÕES
+elif menu == "Movimentações (Entrada/Saída)":
+    st.header("🔄 Registrar Entrada ou Saída de Materiais")
+    
+    cat["Label"] = cat["ID"] + " — " + cat["Material"]
+    
+    with st.form("form_mov"):
+        # Linha corrigida com a variável 'cat' devidamente carregada
         id_e = st.selectbox("SELECIONE O ID DO MATERIAL", sorted(cat["ID"].unique()), key="id_e")
-        p_e = get_p(id_e)
         
-        with st.form("form_entrada", clear_on_submit=True):
-            c1,c2,c3 = st.columns(3)
-            with c1:
-                st.info(f"**Material:** {p_e['Material']}\n\n**Marca:** {p_e['Marca']}")
-                lote_sel = st.text_input("📦 LOTE *", value="LOTE-01")
-            with c2:
-                fab = st.date_input("📅 FABRICAÇÃO", value=date.today())
-                val_d = st.number_input("VALIDADE (DIAS)", 1, value=365)
-            with c3:
-                q_ext = st.number_input("QUANTIDADE", 0.01, value=1.0, key="q_e")
-                st.write(f"Unidade: **{p_e['Unidade']}**")
-                st.write(Destino := "Destino fixo: **GALPÃO DE MATERIAIS REFRATÁRIOS**")
+        # Filtra o nome correspondente ao ID selecionado
+        mat_correspondente = cat[cat["ID"] == id_e]["Material"].values[0]
+        st.write(f"**Material Selecionado:** {mat_correspondente}")
+        
+        tipo = st.selectbox("Tipo de Movimentação", ["Entrada", "Saída"])
+        qtd = st.number_input("Quantidade", min_value=0.0, step=0.1)
+        marca = st.text_input("Marca")
+        lote = st.text_input("Lote")
+        area = st.text_input("Área / Local")
+        resp = st.text_input("Responsável")
+        
+        submitted = st.form_submit_button("Salvar Movimentação")
+        if submitted:
+            nova_linha = {
+                "Data": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "ID": id_e,
+                "Material": mat_correspondente,
+                "Tipo": tipo,
+                "Quantidade": qtd,
+                "Marca": marca,
+                "Lote": lote,
+                "Área": area,
+                "Responsável": resp
+            }
+            st.session_state.movimentacoes = pd.concat(
+                [st.session_state.movimentacoes, pd.DataFrame([nova_linha])], 
+                ignore_index=True
+            )
+            st.success("Movimentação registrada com sucesso!")
 
-            if st.form_submit_button("💾 SALVAR ENTRADA NO GALPÃO", type="primary", use_container_width=True):
-                if lote_sel:
-                    dt = agora_br()
-                    venc = fab + timedelta(days=int(val_d))
-                    nova = {
-                        "ID":id_e, "Material":p_e["Material"], "Marca":p_e["Marca"], "Lote":lote_sel,
-                        "Fabricacao":fab, "Vencimento":venc, "Unidade":p_e["Unidade"], "Qtd_Externa":q_ext,
-                        "Qtd_Interna_Total":q_ext, "Medida_Total":q_ext, "Area_Origem":"FORNECEDOR",
-                        "Area_Destino":"GALPÃO DE MATERIAIS REFRATÁRIOS", "Mov_Tipo":"ENTRADA", 
-                        "Data_Hora_BR":dt.strftime("%d/%m/%Y %H:%M:%S"), "Status":"OK"
-                    }
-                    st.session_state.mov = pd.concat([mov, pd.DataFrame([nova])], ignore_index=True)
-                    salvar(); st.success("Entrada registrada no Galpão com sucesso!"); st.rerun()
-
-        st.divider()
-        st.subheader("🔄 2. Transferência do Galpão para Outras Áreas (Verifica Habilitação + FIFO)")
-        c1,c2 = st.columns(2)
-        with c1:
-            id_t = st.selectbox("ID para Movimentar", sorted(cat["ID"].unique()), key="id_t")
-            p_t_info = get_p(id_t)
-            
-            # Verificar quais áreas estão habilitadas (True) para este ID específico
-            destinos_permitidos = []
-            if p_t_info.get("HAB_SALA_ANEXA", False): destinos_permitidos.append("SALA ANEXA")
-            if p_t_info.get("HAB_OFICINA", False): destinos_permitidos.append("OFICINA DE REVESTIMENTO")
-            
-            st.write(f"**Áreas habilitadas para este ID:** {', '.join(destinos_permitidos) if destinos_permitidos else 'Nenhuma (Apenas Galpão)'}")
-            
-            destino = st.selectbox("TRANSFERIR PARA:", destinos_permitidos if destinos_permitidos else ["Nenhuma área habilitada"])
-            q_t = st.number_input("QUANTIDADE A TRANSFERIR", 0.01, value=1.0, key="q_t")
-            
-            if st.button("🚀 DAR SAÍDA NO GALPÃO E ENTRAR NO DESTINO", type="primary", use_container_width=True):
-                if destinos_permitidos and destino != "Nenhuma área habilitada":
-                    p_t = get_fifo(id_t, "GALPÃO DE MATERIAIS REFRATÁRIOS")
-                    if p_t is not None:
-                        dt = agora_br()
-                        lote_usado = p_t.get("Lote", "LOTE-01")
-                        fab_usada = p_t.get("Fabricacao", date.today())
-                        venc_usado = p_t.get("Vencimento", date.today())
-                        
-                        saida = {
-                            "ID":id_t, "Material":p_t["Material"], "Marca":p_t["Marca"], "Lote":lote_usado,
-                            "Fabricacao":fab_usada, "Vencimento":venc_usado, "Unidade":p_t["Unidade"], "Qtd_Externa":-q_t,
-                            "Qtd_Interna_Total":-q_t, "Medida_Total":-q_t, "Area_Origem":"GALPÃO DE MATERIAIS REFRATÁRIOS", 
-                            "Area_Destino":"GALPÃO DE MATERIAIS REFRATÁRIOS",
-                            "Mov_Tipo":f"SAÍDA GALPÃO -> {destino}", "Data_Hora_BR":dt.strftime("%d/%m/%Y %H:%M:%S"), "Status":f"LOTE {lote_usado}"
-                        }
-                        entrada = saida.copy()
-                        entrada["Qtd_Externa"] = q_t
-                        entrada["Qtd_Interna_Total"] = q_t
-                        entrada["Medida_Total"] = q_t
-                        entrada["Area_Origem"] = "GALPÃO DE MATERIAIS REFRATÁRIOS"
-                        entrada["Area_Destino"] = destino
-                        entrada["Mov_Tipo"] = f"ENTRADA em {destino}"
-                        entrada["Status"] = f"Recebido LOTE {lote_usado}"
-                        
-                        st.session_state.mov = pd.concat([st.session_state.mov, pd.DataFrame([saida, entrada])], ignore_index=True)
-                        salvar(); st.success(f"Transferência realizada para {destino}!"); st.rerun()
-                else:
-                    st.error("Este material não está habilitado para esta área. Vá na aba de Catálogo para habilitar.")
-        with c2:
-            if not mov.empty:
-                st.write("Estoque Consolidado por Área (FIFO)")
-                saldo = mov.groupby(["ID","Lote","Area_Destino"]).agg(Saldo=("Qtd_Externa","sum")).reset_index()
-                saldo = saldo[saldo["Saldo"]>0].sort_values(["ID","Lote"])
-                st.dataframe(saldo, use_container_width=True, height=300)
-
-with tab_est:
-    if not mov.empty:
-        st.dataframe(mov.sort_values("Data_Hora_BR", ascending=False), use_container_width=True, height=500)
+    st.subheader("📋 Histórico Geral de Lançamentos")
+    if not st.session_state.movimentacoes.empty:
+        st.dataframe(st.session_state.movimentacoes, use_container_width=True)
     else:
-        st.info("Nenhuma movimentação registrada.")
+        st.info("Nenhum lançamento efetuado ainda.")
 
-with tab_graf:
-    if mov.empty:
-        st.info("Sem dados para gerar gráficos.")
-    else:
-        mov["Data_Hora_BR_DT"] = pd.to_datetime(mov["Data_Hora_BR"], format="%d/%m/%Y %H:%M:%S", errors='coerce')
-        mov["Tipo_Ent_Sai"] = mov["Qtd_Externa"].apply(lambda x: "ENTRADA" if x>0 else "SAÍDA")
-        mov["Qtd_Abs"] = mov["Qtd_Externa"].abs()
-
-        fig1 = px.bar(
-            mov.groupby(["ID","Tipo_Ent_Sai"]).agg(Qtd=("Qtd_Abs","sum")).reset_index(), 
-            x="ID", y="Qtd", color="Tipo_Ent_Sai", barmode="group", text="Qtd", 
-            title="📊 ENTRADA X SAÍDA POR ID", color_discrete_map={"ENTRADA":"green","SAÍDA":"red"}
-        )
-        st.plotly_chart(fig1, use_container_width=True)
-
-        sl = mov.groupby(["ID","Lote","Fabricacao","Area_Destino"]).agg(Externa=("Qtd_Externa","sum")).reset_index()
-        sl = sl[sl["Externa"]>0].sort_values("Fabricacao")
-        if not sl.empty:
-            sl["Label"] = sl["ID"] + " | LOTE: " + sl["Lote"] + " | " + sl["Area_Destino"]
-            fig2 = px.bar(sl, x="Externa", y="Label", orientation='h', color="Area_Destino", text="Externa", title="📦 ESTOQUE ATUAL POR ÁREA (FIFO)")
-            st.plotly_chart(fig2, use_container_width=True)
+# 3. CADASTRO BASE
+elif menu == "Cadastro Base de Itens":
+    st.header("📋 Cadastro Base de Materiais (17 Itens)")
+    st.dataframe(cat[["ID", "Material", "Unidade"]], use_container_width=True)
+    
+    with st.form("novo_item"):
+        st.subheader("Adicionar Novo Item na Base")
+        novo_id = st.text_input("ID (Ex: ID-18)")
+        novo_mat = st.text_input("Nome do Material")
+        nova_un = st.text_input("Unidade (Ex: KG, UN, M2)")
+        add_submitted = st.form_submit_button("Cadastrar Item")
+        if add_submitted and novo_id and novo_mat:
+            novo_registro = pd.DataFrame([{"ID": novo_id, "Material": novo_mat, "Unidade": nova_un}])
+            st.session_state.cat = pd.concat([st.session_state.cat, novo_registro], ignore_index=True)
+            st.success(f"Item {novo_id} adicionado com sucesso! Atualize a página se necessário.")
