@@ -112,6 +112,7 @@ with tab_mov:
                 nova = {"ID_RASTREADOR":id_e,"DESCRICAO":p_e["DESCRICAO"],"MARCA":p_e["MARCA"],"LOTE":p_e["LOTE"],"FABRICACAO":p_e["FABRICACAO"],"VENCIMENTO":p_e["VENCIMENTO"],"EMB_EXTERNA":p_e["EMB_EXTERNA"],"EMB_INTERNA":p_e["EMB_INTERNA"],"QTD_INTERNA_POR_EXTERNA":p_e["QTD_INTERNA_POR_EXTERNA"],"MEDIDA_POR_INTERNA":p_e["MEDIDA_POR_INTERNA"],"UN_MEDIDA":p_e["UN_MEDIDA"],"TOTAL_POR_EXTERNA":p_e["TOTAL_POR_EXTERNA"],"QTD_EXTERNA":q_ext,"QTD_INTERNA_TOTAL":q_int_tot,"MEDIDA_TOTAL":med_tot,"AREA_ORIGEM":"FORNECEDOR","AREA_DESTINO":area_e,"MOV_TIPO":"ENTRADA","DATA_MOV":dt.date(),"HORA_MOV":dt.strftime("%H:%M:%S"),"DATA_HORA_BR":dt.strftime("%d/%m/%Y %H:%M:%S"),"STATUS":"OK"}
                 st.session_state.mov = pd.concat([mov, pd.DataFrame([nova])], ignore_index=True)
                 salvar(); st.rerun()
+
         st.divider()
         c1,c2 = st.columns(2)
         with c1:
@@ -139,36 +140,65 @@ with tab_mov:
 with tab_est:
     if not mov.empty:
         st.dataframe(mov.sort_values("DATA_HORA_BR", ascending=False), use_container_width=True, height=500)
+    else:
+        st.info("Nenhuma movimentação registrada.")
 
 with tab_graf:
-    if mov.empty: st.info("Sem dados")
+    if mov.empty:
+        st.info("Sem dados para gerar gráficos.")
     else:
         mov["DATA_HORA_BR_DT"] = pd.to_datetime(mov["DATA_HORA_BR"], format="%d/%m/%Y %H:%M:%S", errors='coerce')
         mov["TIPO_ENT_SAI"] = mov["QTD_EXTERNA"].apply(lambda x: "ENTRADA" if x>0 else "SAÍDA")
         mov["QTD_ABS"] = mov["QTD_EXTERNA"].abs()
 
         # GRÁFICO 1 - POR ID RASTREADOR - ENTRADA x SAÍDA
-        fig1 = px.bar(mov.groupby(["ID_RASTREADOR","TIPO_ENT_SAI"]).agg(QTD=("QTD_ABS","sum"), MEDIDA=("MEDIDA_TOTAL","sum")).reset_index().assign(MEDIDA=lambda d: d["MEDIDA"].abs()), x="ID_RASTREADOR", y="QTD", color="TIPO_ENT_SAI", barmode="group", text="QTD", title="📊 POR ID RASTREADOR: ENTRADA x SAÍDA (QTD Externa) - Horário Brasília", color_discrete_map={"ENTRADA":"green","SAÍDA":"red"})
-        fig1.update_layout(height=500); st.plotly_chart(fig1, use_container_width=True)
+        fig1 = px.bar(
+            mov.groupby(["ID_RASTREADOR","TIPO_ENT_SAI"]).agg(QTD=("QTD_ABS","sum"), MEDIDA=("MEDIDA_TOTAL","sum")).reset_index().assign(MEDIDA=lambda d: d["MEDIDA"].abs()), 
+            x="ID_RASTREADOR", y="QTD", color="TIPO_ENT_SAI", barmode="group", text="QTD", 
+            title="📊 POR ID RASTREADOR: ENTRADA x SAÍDA (QTD Externa) - Horário Brasília", 
+            color_discrete_map={"ENTRADA":"green","SAÍDA":"red"}
+        )
+        fig1.update_layout(height=500)
+        st.plotly_chart(fig1, use_container_width=True)
 
         # GRÁFICO 2 - ENTRADA E SAÍDA COM DATA/HORA
-        fig2 = px.bar(mov, x="DATA_HORA_BR", y="QTD_ABS", color="TIPO_ENT_SAI", facet_col="ID_RASTREADOR", facet_col_wrap=2, hover_data=["LOTE","MARCA","AREA_ORIGEM","AREA_DESTINO","MEDIDA_TOTAL"], title="📅 ENTRADA E SAÍDA POR ID COM DATA/HORA BRASÍLIA", color_discrete_map={"ENTRADA":"green","SAÍDA":"red"})
-        fig2.update_layout(height=800); st.plotly_chart(fig2, use_container_width=True)
+        fig2 = px.bar(
+            mov, x="DATA_HORA_BR", y="QTD_ABS", color="TIPO_ENT_SAI", facet_col="ID_RASTREADOR", facet_col_wrap=2, 
+            hover_data=["LOTE","MARCA","AREA_ORIGEM","AREA_DESTINO","MEDIDA_TOTAL"], 
+            title="📅 ENTRADA E SAÍDA POR ID COM DATA/HORA BRASÍLIA", 
+            color_discrete_map={"ENTRADA":"green","SAÍDA":"red"}
+        )
+        fig2.update_layout(height=800)
+        st.plotly_chart(fig2, use_container_width=True)
 
         # GRÁFICO 3 - LINHA DO TEMPO POR ID
-        fig3 = px.line(mov.sort_values("DATA_HORA_BR_DT"), x="DATA_HORA_BR_DT", y="QTD_EXTERNA", color="ID_RASTREADOR", markers=True, title="📈 LINHA DO TEMPO: Movimentação por ID ao longo do tempo (Brasília)", hover_data=["LOTE","MOV_TIPO","AREA_DESTINO"])
-        fig3.update_layout(height=600); st.plotly_chart(fig3, use_container_width=True)
+        fig3 = px.line(
+            mov.sort_values("DATA_HORA_BR_DT"), x="DATA_HORA_BR_DT", y="QTD_EXTERNA", color="ID_RASTREADOR", markers=True, 
+            title="📈 LINHA DO TEMPO: Movimentação por ID ao longo do tempo (Brasília)", 
+            hover_data=["LOTE","MOV_TIPO","AREA_DESTINO"]
+        )
+        fig3.update_layout(height=600)
+        st.plotly_chart(fig3, use_container_width=True)
 
-        # GRÁFICO 4 - HORIZONTAL POR LOTE (O QUE PEDIU ANTES)
+        # GRÁFICO 4 - HORIZONTAL POR LOTE
         sl = mov.groupby(["ID_RASTREADOR","LOTE","FABRICACAO","AREA_DESTINO"]).agg(EXTERNA=("QTD_EXTERNA","sum")).reset_index()
         sl = sl[sl["EXTERNA"]>0].sort_values("FABRICACAO")
-        sl["LABEL"] = sl["ID_RASTREADOR"] + " | LOTE: " + sl["LOTE"] + " | " + sl["AREA_DESTINO"] + " | " + sl["FABRICACAO"].astype(str)
-        fig4 = px.bar(sl, x="EXTERNA", y="LABEL", orientation='h', color="LOTE", text="EXTERNA", title="📦 ESTOQUE ATUAL POR ID + LOTE (FIFO) - Cada lote uma cor")
-        fig4.update_layout(height=900); st.plotly_chart(fig4, use_container_width=True)
+        if not sl.empty:
+            sl["LABEL"] = sl["ID_RASTREADOR"] + " | LOTE: " + sl["LOTE"] + " | " + sl["AREA_DESTINO"] + " | " + sl["FABRICACAO"].astype(str)
+            fig4 = px.bar(
+                sl, x="EXTERNA", y="LABEL", orientation='h', color="LOTE", text="EXTERNA", 
+                title="📦 ESTOQUE ATUAL POR ID + LOTE (FIFO) - Cada lote uma cor"
+            )
+            fig4.update_layout(height=900)
+            st.plotly_chart(fig4, use_container_width=True)
 
         # GRÁFICO 5 - O QUE ESTÁ SAINDO AGORA
-        ult = mov[mov["QTD_EXTERNA"]<0].sort_values("DATA_HORA_BR_DT", ascending=False).head(20).copy()
+        ult = mov[mov["QTD_EXTERNA"] < 0].sort_values("DATA_HORA_BR_DT", ascending=False).head(20).copy()
         if not ult.empty:
             ult["LAB"] = ult["ID_RASTREADOR"] + " | LOTE: " + ult["LOTE"] + " | " + ult["DATA_HORA_BR"] + " | " + ult["AREA_ORIGEM"] + "->" + ult["AREA_DESTINO"]
-            fig5 = px.bar(ult, x="QTD_ABS", y="LAB", orientation='h', color="ID_RASTREADOR", text="QTD_ABS", title="🔴 O QUE ESTÁ SAINDO AGORA - Com Data/Hora Brasília")
-            fig5.update_layout(height=700); st.plotly_chart(fig5, use_container_width=True)
+            fig5 = px.bar(
+                ult, x="QTD_ABS", y="LAB", orientation='h', color="ID_RASTREADOR", text="QTD_ABS", 
+                title="🔴 O QUE ESTÁ SAINDO AGORA - Com Data/Hora Brasília"
+            )
+            fig5.update_layout(height=700)
+            st.plotly_chart(fig5, use_container_width=True)
