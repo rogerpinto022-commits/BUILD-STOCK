@@ -20,10 +20,10 @@ def get_now_br():
 
 
 # Arquivos de Persistência Local (CSV)
-ESTOQUE_FILE = "build_stock_estoque_v6.csv"
-MOV_FILE = "build_stock_movimentacoes_v6.csv"
-PERMISSOES_FILE = "build_stock_permissoes_v6.csv"
-COMBO_FILE = "build_stock_combos_v6.csv"
+ESTOQUE_FILE = "build_stock_estoque_v7.csv"
+MOV_FILE = "build_stock_movimentacoes_v7.csv"
+PERMISSOES_FILE = "build_stock_permissoes_v7.csv"
+COMBO_FILE = "build_stock_combos_v7.csv"
 
 areas_reais = [
     "🏭 Galpão de Materiais Refratários",
@@ -32,27 +32,44 @@ areas_reais = [
 ]
 
 
-# CARGA INICIAL PRÉ-CADASTRADA (LTC 02/07/2026 - 09:30 BRT)
+# CARGA INICIAL PRÉ-CADASTRADA (LTC COMPLETA - 02/07/2026)
 def criar_carga_inicial_ltc():
   dados_iniciais = [
-      # 1 | CIMENTO LAFARGE FONDU
+      # 1 | CIMENTO LAFARGE FONDU LOTE 09/07/25_1400kg
       {
           "ID": "ID-1",
           "Descrição": "CIMENTO LAFARGE FONDU",
           "Marca": "LAFARGE",
-          "Lote": "09/07/25",
+          "Lote": "09/07/25_1400",
           "Fabricação": "2025-07-09",
           "Validade": "2026-07-09",
           "Área": areas_reais[0],
-          "Qtd Externa": 6.0,
+          "Qtd Externa": 8.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1400.0,
           "Unidade Final": "KG",
-          "Total Geral": 8400.0,
+          "Total Geral": 11200.0,
       },
-      # 2 | CARBETO DE SILICIO
+      # 1 | CIMENTO LAFARGE FONDU LOTE 09/07/25_375
+      {
+          "ID": "ID-1",
+          "Descrição": "CIMENTO LAFARGE FONDU",
+          "Marca": "LAFARGE",
+          "Lote": "09/07/25_375",
+          "Fabricação": "2025-07-09",
+          "Validade": "2026-07-09",
+          "Área": areas_reais[0],
+          "Qtd Externa": 7.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "Saco",
+          "Medida por Interna": 375.0,
+          "Unidade Final": "KG",
+          "Total Geral": 2625.0,
+      },
+      # 2 | CARBETO DE SILICIO 1000
       {
           "ID": "ID-2",
           "Descrição": "CARBETO DE SILICIO",
@@ -61,15 +78,15 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 3.0,
+          "Qtd Externa": 4.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1000.0,
           "Unidade Final": "KG",
-          "Total Geral": 3000.0,
+          "Total Geral": 4000.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-1200kg
+      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-1200
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S",
@@ -78,15 +95,15 @@ def criar_carga_inicial_ltc():
           "Fabricação": "2026-01-01",
           "Validade": "2027-01-01",
           "Área": areas_reais[0],
-          "Qtd Externa": 5.0,
+          "Qtd Externa": 7.0,
           "Emb Externa": "Palete",
           "Qtd Interna por Externa": 1.0,
           "Emb Interna": "Saco",
           "Medida por Interna": 1200.0,
           "Unidade Final": "KG",
-          "Total Geral": 6000.0,
+          "Total Geral": 8400.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-400kg
+      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-400
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S",
@@ -103,7 +120,7 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 400.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1250kg
+      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1250
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
@@ -120,7 +137,7 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 5000.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1000kg
+      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1000
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
@@ -137,7 +154,7 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 1000.0,
       },
-      # 4 | CASTIBAR PSI UG 1250kg
+      # 4 | CASTIBAR PSI UG 1250
       {
           "ID": "ID-4",
           "Descrição": "CASTIBAR PSI UG",
@@ -154,7 +171,7 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 5000.0,
       },
-      # 4 | CASTIBAR PSI UG-1000kg
+      # 4 | CASTIBAR PSI UG-1000
       {
           "ID": "ID-4",
           "Descrição": "CASTIBAR PSI UG",
@@ -183,10 +200,554 @@ def criar_carga_inicial_ltc():
           "Qtd Externa": 1.0,
           "Emb Externa": "Caixa",
           "Qtd Interna por Externa": 6.0,
-          "Emb Interna": "UN",
+          "Emb Interna": "PACOTE",
           "Medida por Interna": 1.0,
           "Unidade Final": "UN",
           "Total Geral": 6.0,
+      },
+      # 5 | LÃ DE ROCHA IBAR CORTADO
+      {
+          "ID": "ID-5",
+          "Descrição": "LÃ DE ROCHA IBAR CORTADO",
+          "Marca": "IBAR",
+          "Lote": "LOTE-5B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Caixa",
+          "Qtd Interna por Externa": 94.0,
+          "Emb Interna": "PACOTE",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 94.0,
+      },
+      # 6 | TIJOLO SEMI ISOLANTE SUPRA SKAMOL ALUPOROS- 912
+      {
+          "ID": "ID-6",
+          "Descrição": "TIJOLO SEMI ISOLANTE SUPRA SKAMOL ALUPOROS- 912",
+          "Marca": "SKAMOL",
+          "Lote": "LOTE-6A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 3.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 3.0,
+      },
+      # 6 | TIJOLO SEMI ISOLANTE SUPRA MOSCONI AB70- 1020
+      {
+          "ID": "ID-6",
+          "Descrição": "TIJOLO SEMI ISOLANTE SUPRA MOSCONI AB70- 1020",
+          "Marca": "MOSCONI",
+          "Lote": "LOTE-6B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 31.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1020.0,
+          "Unidade Final": "UN",
+          "Total Geral": 31620.0,
+      },
+      # 7 | TIJOLO ISOLANTE SKAMOL ALUPOROS 912
+      {
+          "ID": "ID-7",
+          "Descrição": "TIJOLO ISOLANTE SKAMOL ALUPOROS 912",
+          "Marca": "SKAMOL",
+          "Lote": "LOTE-7A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 100.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 100.0,
+      },
+      # 7 | TIJOLO ISOLANTE MOSCONI AB 55-680
+      {
+          "ID": "ID-7",
+          "Descrição": "TIJOLO ISOLANTE MOSCONI AB 55-680",
+          "Marca": "MOSCONI",
+          "Lote": "LOTE-7B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 256.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 680.0,
+          "Unidade Final": "UN",
+          "Total Geral": 174080.0,
+      },
+      # 8 | SA ALUM 512
+      {
+          "ID": "ID-8",
+          "Descrição": "SA ALUM 512",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-8A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 290.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 290.0,
+      },
+      # 8 | TIJOLOS REFRATÁRIOS VESUVIUS (PERU) 336
+      {
+          "ID": "ID-8",
+          "Descrição": "TIJOLOS REFRATÁRIOS VESUVIUS (PERU) 336",
+          "Marca": "VESUVIUS",
+          "Lote": "LOTE-8B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 13.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 336.0,
+          "Unidade Final": "UN",
+          "Total Geral": 4368.0,
+      },
+      # 8 | TIJOLO REFRATÁRIO VESUVIUS 416 (CHINA)
+      {
+          "ID": "ID-8",
+          "Descrição": "TIJOLO REFRATÁRIO VESUVIUS 416 (CHINA)",
+          "Marca": "VESUVIUS",
+          "Lote": "LOTE-8C",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 9.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 416.0,
+          "Unidade Final": "UN",
+          "Total Geral": 3744.0,
+      },
+      # 8 | TIJOLO REFRATÁRIO VESUVIUS 296 (CHINA)
+      {
+          "ID": "ID-8",
+          "Descrição": "TIJOLO REFRATÁRIO VESUVIUS 296 (CHINA)",
+          "Marca": "VESUVIUS",
+          "Lote": "LOTE-8D",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Palete",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 294.0,
+          "Unidade Final": "UN",
+          "Total Geral": 294.0,
+      },
+      # 11 | CHAMOTE IBAR
+      {
+          "ID": "ID-11",
+          "Descrição": "CHAMOTE IBAR",
+          "Marca": "IBAR",
+          "Lote": "LOTE-11A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Granel",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 18000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 18000.0,
+      },
+      # 11 | CHAMOTE TECFIRE
+      {
+          "ID": "ID-11",
+          "Descrição": "CHAMOTE TECFIRE",
+          "Marca": "TECFIRE",
+          "Lote": "LOTE-11B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Granel",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 26000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 26000.0,
+      },
+      # 12 | PASTA FRIA ELKEN T30- REMENDO 74630_74631
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA ELKEN T30- REMENDO",
+          "Marca": "ELKEN",
+          "Lote": "74630_74631",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 1000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 1000.0,
+      },
+      # 12 | PASTA FRIA REMENDO 75074_75075 A 75085_75087
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA REMENDO MULTIPLOS",
+          "Marca": "ELKEN",
+          "Lote": "75074-75087",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 4000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 4000.0,
+      },
+      # 12 | PASTA FRIA 75949_75952
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA",
+          "Marca": "ELKEN",
+          "Lote": "75949_75952",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 10000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 10000.0,
+      },
+      # 12 | PASTA FRIA 76007_76010
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA",
+          "Marca": "ELKEN",
+          "Lote": "76007_76010",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 10000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 10000.0,
+      },
+      # 12 | PASTA FRIA ELKEN 76323_76328
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA ELKEN",
+          "Marca": "ELKEN",
+          "Lote": "76323_76328",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 24000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 24000.0,
+      },
+      # 12 | PASTA FRIA ELKEN 76069_76086
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA ELKEN",
+          "Marca": "ELKEN",
+          "Lote": "76069_76086",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 9000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 9000.0,
+      },
+      # 12 | PASTAS ELKEN 76030_76037 E 76062_76067
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA FRIA ELKEN",
+          "Marca": "ELKEN",
+          "Lote": "76030-76067",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 1000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 1000.0,
+      },
+      # 12 | PASTA CARBON LOTE 759
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA CARBON",
+          "Marca": "CARBON",
+          "Lote": "759",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 9000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 9000.0,
+      },
+      # 12 | PASTA CARBON LOTE 763
+      {
+          "ID": "ID-12",
+          "Descrição": "PASTA CARBON",
+          "Marca": "CARBON",
+          "Lote": "763",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "Tambor",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "KG",
+          "Medida por Interna": 21000.0,
+          "Unidade Final": "KG",
+          "Total Geral": 21000.0,
+      },
+      # 14 | BLOCOS LATERAL CARBON
+      {
+          "ID": "ID-14",
+          "Descrição": "BLOCOS LATERAL CARBON",
+          "Marca": "CARBON",
+          "Lote": "LOTE-14",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 73.0,
+          "Emb Externa": "CX",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "CX",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 73.0,
+      },
+      # 15 | SALA ANEXA BLOCOS ENGUSADOS SEC=135
+      {
+          "ID": "ID-15",
+          "Descrição": "BLOCOS ENGUSADOS SEC=135",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-15A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[2],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 1.0,
+      },
+      # 15 | BARRACAO BLOCOS ENGUSADOS SEC
+      {
+          "ID": "ID-15",
+          "Descrição": "BARRACAO BLOCOS ENGUSADOS SEC",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-15B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "RESTO",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 1.0,
+      },
+      # 15 | BARRACAO BLOCO DE FUNDO ENERGOPRON
+      {
+          "ID": "ID-15",
+          "Descrição": "BLOCO DE FUNDO ENERGOPRON",
+          "Marca": "ENERGOPRON",
+          "Lote": "LOTE-15C",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "RESTO",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 1.0,
+      },
+      # 15 | BARRACAO BLOCOS DE FUNDO TOKAYCOBEX
+      {
+          "ID": "ID-15",
+          "Descrição": "BLOCOS DE FUNDO TOKAYCOBEX",
+          "Marca": "TOKAYCOBEX",
+          "Lote": "LOTE-15D",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 2.0,
+          "Emb Externa": "RESTO",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 2.0,
+      },
+      # 16 | SALA ANEXA
+      {
+          "ID": "ID-16",
+          "Descrição": "BARRAS CATÓDICAS / ITENS 16",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-16A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[2],
+          "Qtd Externa": 24.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 24.0,
+      },
+      # 16 | BARRACAO
+      {
+          "ID": "ID-16",
+          "Descrição": "BARRAS CATÓDICAS / ITENS 16",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-16B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 680.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 680.0,
+      },
+      # 16 | BARRACAO BARRAS CATÓDICAS TESTE
+      {
+          "ID": "ID-16",
+          "Descrição": "BARRAS CATÓDICAS TESTE",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-16C",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 9.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 9.0,
+      },
+      # 16 | BARRACAO BARRAS CATÓDICAS TESTE 2
+      {
+          "ID": "ID-16",
+          "Descrição": "BARRAS CATÓDICAS TESTE",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-16D",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 113.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 113.0,
+      },
+      # 17 | BARRACÃO BLOCOS DE FUNDO SEC= 201
+      {
+          "ID": "ID-17",
+          "Descrição": "BLOCOS DE FUNDO SEC",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-17A",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 402.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 402.0,
+      },
+      # 17 | BARRACAO BLOCOS DE FUNDO TOKAYCOBEX
+      {
+          "ID": "ID-17",
+          "Descrição": "BLOCOS DE FUNDO TOKAYCOBEX",
+          "Marca": "TOKAYCOBEX",
+          "Lote": "LOTE-17B",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[0],
+          "Qtd Externa": 1.0,
+          "Emb Externa": "RESTO",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 1.0,
+      },
+      # 17 | ANEXA BLOCOS SEC= 25
+      {
+          "ID": "ID-17",
+          "Descrição": "BLOCOS SEC",
+          "Marca": "PADRÃO",
+          "Lote": "LOTE-17C",
+          "Fabricação": "2026-01-01",
+          "Validade": "2027-01-01",
+          "Área": areas_reais[2],
+          "Qtd Externa": 25.0,
+          "Emb Externa": "UN",
+          "Qtd Interna por Externa": 1.0,
+          "Emb Interna": "UN",
+          "Medida por Interna": 1.0,
+          "Unidade Final": "UN",
+          "Total Geral": 25.0,
       },
   ]
   return pd.DataFrame(dados_iniciais)
@@ -219,9 +780,24 @@ if "permissoes_df" not in st.session_state:
   if os.path.exists(PERMISSOES_FILE):
     st.session_state.permissoes_df = pd.read_csv(PERMISSOES_FILE)
   else:
-    # Cria permissões ativas para todos os IDs iniciais em todas as áreas
     perm_list = []
-    for i in [f"ID-{n}" for n in range(1, 6)]:
+    ids_unicos = [
+        "ID-1",
+        "ID-2",
+        "ID-3",
+        "ID-4",
+        "ID-5",
+        "ID-6",
+        "ID-7",
+        "ID-8",
+        "ID-11",
+        "ID-12",
+        "ID-14",
+        "ID-15",
+        "ID-16",
+        "ID-17",
+    ]
+    for i in ids_unicos:
       for a in areas_reais:
         perm_list.append({"ID": i, "Área": a, "Ativo": True})
     st.session_state.permissoes_df = pd.DataFrame(perm_list)
@@ -262,7 +838,8 @@ def garantir_permissao(id_prod, area):
 
 # Título Principal
 st.title(
-    "📦 BUILD STOCK BR — Almoxarifado Industrial (LTC 02/07/2026 Carregada)"
+    "📦 BUILD STOCK BR — Gestão Industrial (LTC 02/07/2026 Carregada com"
+    " Sucesso)"
 )
 st.markdown("---")
 
@@ -347,7 +924,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
   with st.form("form_mestre", clear_on_submit=True):
     c1, c2, c3 = st.columns(3)
     with c1:
-      id_prod = st.text_input("🔖 ID Rastreador / Código (Ex: ID-6) *")
+      id_prod = st.text_input("🔖 ID Rastreador / Código (Ex: ID-18) *")
       descricao = st.text_input("📝 Descrição do Material *")
     with c2:
       marca = st.text_input("🏷️ Marca / Fabricante *")
@@ -364,7 +941,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
       qtd_ext = st.number_input("Qtd Externa", min_value=0.1, value=1.0)
     with c5:
       emb_ext = st.selectbox(
-          "Tipo Emb Externa", ["Palete", "Caixa", "Fardo", "Tambor"]
+          "Tipo Emb Externa", ["Palete", "Caixa", "Fardo", "Tambor", "UN"]
       )
     with c6:
       qtd_int_ext = st.number_input(
@@ -376,7 +953,7 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
       )
 
     medida_int = st.number_input(
-        "⚖️ Medida por Unidade Interna", min_value=0.01, value=1000.0
+        "⚖️ Medida por Unidade Interna", min_value=0.01, value=1.0
     )
     un_final = st.selectbox("📏 Unidade Final", ["KG", "UN", "L", "M", "M²"])
 
