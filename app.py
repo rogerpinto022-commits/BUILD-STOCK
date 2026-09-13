@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import pandas as pd
 import pytz
@@ -20,10 +20,10 @@ def get_now_br():
 
 
 # Arquivos de Persistência Local (CSV)
-ESTOQUE_FILE = "build_stock_estoque_v7.csv"
-MOV_FILE = "build_stock_movimentacoes_v7.csv"
-PERMISSOES_FILE = "build_stock_permissoes_v7.csv"
-COMBO_FILE = "build_stock_combos_v7.csv"
+ESTOQUE_FILE = "build_stock_estoque_v8.csv"
+MOV_FILE = "build_stock_movimentacoes_v8.csv"
+PERMISSOES_FILE = "build_stock_permissoes_v8.csv"
+COMBO_FILE = "build_stock_combos_v8.csv"
 
 areas_reais = [
     "🏭 Galpão de Materiais Refratários",
@@ -35,7 +35,6 @@ areas_reais = [
 # CARGA INICIAL PRÉ-CADASTRADA (LTC COMPLETA - 02/07/2026)
 def criar_carga_inicial_ltc():
   dados_iniciais = [
-      # 1 | CIMENTO LAFARGE FONDU LOTE 09/07/25_1400kg
       {
           "ID": "ID-1",
           "Descrição": "CIMENTO LAFARGE FONDU",
@@ -52,7 +51,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 11200.0,
       },
-      # 1 | CIMENTO LAFARGE FONDU LOTE 09/07/25_375
       {
           "ID": "ID-1",
           "Descrição": "CIMENTO LAFARGE FONDU",
@@ -69,7 +67,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 2625.0,
       },
-      # 2 | CARBETO DE SILICIO 1000
       {
           "ID": "ID-2",
           "Descrição": "CARBETO DE SILICIO",
@@ -86,7 +83,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 4000.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-1200
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S",
@@ -103,7 +99,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 8400.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA TECNOFIRE 50S-400
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S",
@@ -120,7 +115,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 400.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1250
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
@@ -137,7 +131,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 5000.0,
       },
-      # 3 | ARGAMASSA REFRATÁRIA PLACIBAR SG-1000
       {
           "ID": "ID-3",
           "Descrição": "ARGAMASSA REFRATÁRIA PLACIBAR SG",
@@ -154,7 +147,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 1000.0,
       },
-      # 4 | CASTIBAR PSI UG 1250
       {
           "ID": "ID-4",
           "Descrição": "CASTIBAR PSI UG",
@@ -171,7 +163,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 5000.0,
       },
-      # 4 | CASTIBAR PSI UG-1000
       {
           "ID": "ID-4",
           "Descrição": "CASTIBAR PSI UG",
@@ -188,7 +179,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 4000.0,
       },
-      # 5 | LÃ DE ROCHA IBAR SEM CORTE
       {
           "ID": "ID-5",
           "Descrição": "LÃ DE ROCHA IBAR SEM CORTE",
@@ -205,7 +195,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 6.0,
       },
-      # 5 | LÃ DE ROCHA IBAR CORTADO
       {
           "ID": "ID-5",
           "Descrição": "LÃ DE ROCHA IBAR CORTADO",
@@ -222,7 +211,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 94.0,
       },
-      # 6 | TIJOLO SEMI ISOLANTE SUPRA SKAMOL ALUPOROS- 912
       {
           "ID": "ID-6",
           "Descrição": "TIJOLO SEMI ISOLANTE SUPRA SKAMOL ALUPOROS- 912",
@@ -239,7 +227,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 3.0,
       },
-      # 6 | TIJOLO SEMI ISOLANTE SUPRA MOSCONI AB70- 1020
       {
           "ID": "ID-6",
           "Descrição": "TIJOLO SEMI ISOLANTE SUPRA MOSCONI AB70- 1020",
@@ -256,7 +243,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 31620.0,
       },
-      # 7 | TIJOLO ISOLANTE SKAMOL ALUPOROS 912
       {
           "ID": "ID-7",
           "Descrição": "TIJOLO ISOLANTE SKAMOL ALUPOROS 912",
@@ -273,7 +259,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 100.0,
       },
-      # 7 | TIJOLO ISOLANTE MOSCONI AB 55-680
       {
           "ID": "ID-7",
           "Descrição": "TIJOLO ISOLANTE MOSCONI AB 55-680",
@@ -290,7 +275,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 174080.0,
       },
-      # 8 | SA ALUM 512
       {
           "ID": "ID-8",
           "Descrição": "SA ALUM 512",
@@ -307,7 +291,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 290.0,
       },
-      # 8 | TIJOLOS REFRATÁRIOS VESUVIUS (PERU) 336
       {
           "ID": "ID-8",
           "Descrição": "TIJOLOS REFRATÁRIOS VESUVIUS (PERU) 336",
@@ -324,7 +307,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 4368.0,
       },
-      # 8 | TIJOLO REFRATÁRIO VESUVIUS 416 (CHINA)
       {
           "ID": "ID-8",
           "Descrição": "TIJOLO REFRATÁRIO VESUVIUS 416 (CHINA)",
@@ -341,7 +323,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 3744.0,
       },
-      # 8 | TIJOLO REFRATÁRIO VESUVIUS 296 (CHINA)
       {
           "ID": "ID-8",
           "Descrição": "TIJOLO REFRATÁRIO VESUVIUS 296 (CHINA)",
@@ -358,7 +339,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 294.0,
       },
-      # 11 | CHAMOTE IBAR
       {
           "ID": "ID-11",
           "Descrição": "CHAMOTE IBAR",
@@ -375,7 +355,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 18000.0,
       },
-      # 11 | CHAMOTE TECFIRE
       {
           "ID": "ID-11",
           "Descrição": "CHAMOTE TECFIRE",
@@ -392,7 +371,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 26000.0,
       },
-      # 12 | PASTA FRIA ELKEN T30- REMENDO 74630_74631
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA ELKEN T30- REMENDO",
@@ -409,7 +387,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 1000.0,
       },
-      # 12 | PASTA FRIA REMENDO 75074_75075 A 75085_75087
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA REMENDO MULTIPLOS",
@@ -426,7 +403,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 4000.0,
       },
-      # 12 | PASTA FRIA 75949_75952
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA",
@@ -443,7 +419,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 10000.0,
       },
-      # 12 | PASTA FRIA 76007_76010
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA",
@@ -460,7 +435,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 10000.0,
       },
-      # 12 | PASTA FRIA ELKEN 76323_76328
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA ELKEN",
@@ -477,7 +451,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 24000.0,
       },
-      # 12 | PASTA FRIA ELKEN 76069_76086
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA ELKEN",
@@ -494,7 +467,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 9000.0,
       },
-      # 12 | PASTAS ELKEN 76030_76037 E 76062_76067
       {
           "ID": "ID-12",
           "Descrição": "PASTA FRIA ELKEN",
@@ -511,7 +483,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 1000.0,
       },
-      # 12 | PASTA CARBON LOTE 759
       {
           "ID": "ID-12",
           "Descrição": "PASTA CARBON",
@@ -528,7 +499,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 9000.0,
       },
-      # 12 | PASTA CARBON LOTE 763
       {
           "ID": "ID-12",
           "Descrição": "PASTA CARBON",
@@ -545,7 +515,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "KG",
           "Total Geral": 21000.0,
       },
-      # 14 | BLOCOS LATERAL CARBON
       {
           "ID": "ID-14",
           "Descrição": "BLOCOS LATERAL CARBON",
@@ -562,7 +531,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 73.0,
       },
-      # 15 | SALA ANEXA BLOCOS ENGUSADOS SEC=135
       {
           "ID": "ID-15",
           "Descrição": "BLOCOS ENGUSADOS SEC=135",
@@ -579,7 +547,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 1.0,
       },
-      # 15 | BARRACAO BLOCOS ENGUSADOS SEC
       {
           "ID": "ID-15",
           "Descrição": "BARRACAO BLOCOS ENGUSADOS SEC",
@@ -596,7 +563,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 1.0,
       },
-      # 15 | BARRACAO BLOCO DE FUNDO ENERGOPRON
       {
           "ID": "ID-15",
           "Descrição": "BLOCO DE FUNDO ENERGOPRON",
@@ -613,7 +579,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 1.0,
       },
-      # 15 | BARRACAO BLOCOS DE FUNDO TOKAYCOBEX
       {
           "ID": "ID-15",
           "Descrição": "BLOCOS DE FUNDO TOKAYCOBEX",
@@ -630,7 +595,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 2.0,
       },
-      # 16 | SALA ANEXA
       {
           "ID": "ID-16",
           "Descrição": "BARRAS CATÓDICAS / ITENS 16",
@@ -647,7 +611,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 24.0,
       },
-      # 16 | BARRACAO
       {
           "ID": "ID-16",
           "Descrição": "BARRAS CATÓDICAS / ITENS 16",
@@ -664,7 +627,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 680.0,
       },
-      # 16 | BARRACAO BARRAS CATÓDICAS TESTE
       {
           "ID": "ID-16",
           "Descrição": "BARRAS CATÓDICAS TESTE",
@@ -681,7 +643,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 9.0,
       },
-      # 16 | BARRACAO BARRAS CATÓDICAS TESTE 2
       {
           "ID": "ID-16",
           "Descrição": "BARRAS CATÓDICAS TESTE",
@@ -698,7 +659,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 113.0,
       },
-      # 17 | BARRACÃO BLOCOS DE FUNDO SEC= 201
       {
           "ID": "ID-17",
           "Descrição": "BLOCOS DE FUNDO SEC",
@@ -715,7 +675,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 402.0,
       },
-      # 17 | BARRACAO BLOCOS DE FUNDO TOKAYCOBEX
       {
           "ID": "ID-17",
           "Descrição": "BLOCOS DE FUNDO TOKAYCOBEX",
@@ -732,7 +691,6 @@ def criar_carga_inicial_ltc():
           "Unidade Final": "UN",
           "Total Geral": 1.0,
       },
-      # 17 | ANEXA BLOCOS SEC= 25
       {
           "ID": "ID-17",
           "Descrição": "BLOCOS SEC",
@@ -753,7 +711,7 @@ def criar_carga_inicial_ltc():
   return pd.DataFrame(dados_iniciais)
 
 
-# 1. CARREGAMENTO COM PERSISTÊNCIA REAL
+# Carregamento com Persistência
 if "estoque_df" not in st.session_state:
   if os.path.exists(ESTOQUE_FILE):
     st.session_state.estoque_df = pd.read_csv(ESTOQUE_FILE)
@@ -781,22 +739,7 @@ if "permissoes_df" not in st.session_state:
     st.session_state.permissoes_df = pd.read_csv(PERMISSOES_FILE)
   else:
     perm_list = []
-    ids_unicos = [
-        "ID-1",
-        "ID-2",
-        "ID-3",
-        "ID-4",
-        "ID-5",
-        "ID-6",
-        "ID-7",
-        "ID-8",
-        "ID-11",
-        "ID-12",
-        "ID-14",
-        "ID-15",
-        "ID-16",
-        "ID-17",
-    ]
+    ids_unicos = st.session_state.estoque_df["ID"].unique()
     for i in ids_unicos:
       for a in areas_reais:
         perm_list.append({"ID": i, "Área": a, "Ativo": True})
@@ -837,21 +780,18 @@ def garantir_permissao(id_prod, area):
 
 
 # Título Principal
-st.title(
-    "📦 BUILD STOCK BR — Gestão Industrial (LTC 02/07/2026 Carregada com"
-    " Sucesso)"
-)
+st.title("📦 BUILD STOCK BR — Gestão Industrial Avançada por ID e Local")
 st.markdown("---")
 
 # Menu Lateral
 menu = [
-    "📋 Painel & Soma Geral por ID",
+    "📋 Painel & Soma Geral",
+    "📊 Visão por ID, Locais, Gráficos & Histórico",
     "⚙️ Habilitar / Desabilitar IDs por Área",
     "🆕 Cadastro Mestre (Galpão)",
     "🛠️ Cadastro de Combo (Produto Acabado)",
     "⚡ Baixa por Entrega / Produção (7 Caracteres)",
     "🔄 Movimentações Cruzadas",
-    "📊 Gráficos & Linha do Tempo",
 ]
 escolha = st.sidebar.selectbox("🧭 Navegação", menu)
 
@@ -860,41 +800,168 @@ mov_df = st.session_state.mov_df
 perm_df = st.session_state.permissoes_df
 combo_df = st.session_state.combo_df
 
-if escolha == "📋 Painel & Soma Geral por ID":
-  st.subheader("📊 Painel de Controle Consolidado e Soma Geral por ID")
-
+if escolha == "📋 Painel & Soma Geral":
+  st.subheader("📊 Painel de Controle Consolidado")
   if df.empty:
-    st.info("Nenhum material cadastrado no sistema.")
+    st.info("Nenhum material cadastrado.")
   else:
-    st.markdown("### 📈 Soma Total Consolidada de Estoque por ID (Todas as Áreas)")
+    st.markdown("### 📈 Soma Total Consolidada de Estoque por ID")
     soma_por_id = df.groupby(["ID", "Descrição", "Unidade Final"])[
         "Total Geral"
     ].sum().reset_index()
     st.dataframe(soma_por_id, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("### 🏢 Estoque Detalhado por Área e ID")
-    area_filtro = st.selectbox(
-        "Filtrar por Área Específica", ["TODAS AS ÁREAS"] + areas_reais
-    )
-    df_exibir = df.copy()
-    if area_filtro != "TODAS AS ÁREAS":
-      df_exibir = df_exibir[df_exibir["Área"] == area_filtro]
+    st.markdown("### 🏢 Estoque Detalhado")
+    st.dataframe(df, use_container_width=True)
 
-    st.dataframe(df_exibir, use_container_width=True)
+elif escolha == "📊 Visão por ID, Locais, Gráficos & Histórico":
+  st.subheader(
+      "📊 Consulta Detalhada por ID: Locais, Gráficos e Histórico Periódico"
+  )
 
-    csv_data = df_exibir.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="📥 Baixar Relatório Atual (CSV)",
-        data=csv_data,
-        file_name="build_stock_relatorio_geral.csv",
-        mime="text/csv",
+  if df.empty:
+    st.info("Nenhum dado cadastrado.")
+  else:
+    # Seletor de ID
+    lista_ids = sorted(df["ID"].unique())
+    id_selecionado = st.selectbox(
+        "🔍 Selecione o ID do Material",
+        lista_ids,
+        format_func=lambda x: f"{x} — {df[df['ID'] == x]['Descrição'].iloc[0]}",
     )
+
+    # Filtrar dados do ID selecionado
+    df_id_estoque = df[df["ID"] == id_selecionado]
+    desc_material = df_id_estoque["Descrição"].iloc[0]
+    unidade_mat = df_id_estoque["Unidade Final"].iloc[0]
+
+    st.markdown(
+        f"### 🏷️ Detalhes do ID: **{id_selecionado}** — *{desc_material}*"
+    )
+
+    # 1. O QUE TEM EM CADA LOCAL
+    st.markdown("#### 🏢 Saldo Atual Separado por Local (Área)")
+    estoque_por_local = (
+        df_id_estoque.groupby(["Área", "Lote", "Unidade Final"])["Total Geral"]
+        .sum()
+        .reset_index()
+    )
+    if not estoque_por_local.empty:
+      st.dataframe(estoque_por_local, use_container_width=True)
+    else:
+      st.info("Nenhum saldo registrado para este ID.")
+
+    st.markdown("---")
+
+    # 2. GRÁFICOS DO ID POR LOCAL
+    st.markdown("#### 📊 Gráfico de Distribuição por Local")
+    if not estoque_por_local.empty:
+      chart_data = (
+          estoque_por_local.groupby("Área")["Total Geral"].sum().reset_index()
+      )
+      st.bar_chart(chart_data, x="Área", y="Total Geral")
+
+    st.markdown("---")
+
+    # 3. HISTÓRICO DIÁRIO, SEMANAL, MENSAL E ANUAL
+    st.markdown(
+        "#### 🕒 Histórico de Entradas e Saídas (Diário, Semanal, Mensal, Anual)"
+    )
+
+    if mov_df.empty:
+      st.info("Nenhuma movimentação registrada no sistema.")
+    else:
+      mov_id = mov_df[mov_df["ID"] == id_selecionado].copy()
+
+      if mov_id.empty:
+        st.info(f"Nenhuma movimentação registrada para o ID {id_selecionado}.")
+      else:
+        # Converter coluna de Data/Hora para datetime
+        mov_id["Data/Hora_dt"] = pd.to_datetime(
+            mov_id["Data/Hora"], errors="coerce"
+        )
+        agora = datetime.now(BR_TZ)
+
+        # Filtro de Período
+        periodo_filtro = st.selectbox(
+            "📅 Selecione o Período do Histórico",
+            [
+                "Todos os Registros",
+                "Diário (Últimas 24 Horas)",
+                "Semanal (Últimos 7 Dias)",
+                "Mensal (Últimos 30 Dias)",
+                "Anual (Último Ano)",
+            ],
+        )
+
+        if periodo_filtro == "Diário (Últimas 24 Horas)":
+          limite_data = agora - timedelta(days=1)
+          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
+        elif periodo_filtro == "Semanal (Últimos 7 Dias)":
+          limite_data = agora - timedelta(days=7)
+          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
+        elif periodo_filtro == "Mensal (Últimos 30 Dias)":
+          limite_data = agora - timedelta(days=30)
+          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
+        elif periodo_filtro == "Anual (Último Ano)":
+          limite_data = agora - timedelta(days=365)
+          mov_id = mov_id[mov_id["Data/Hora_dt"] >= limite_data]
+
+        if mov_id.empty:
+          st.warning(
+              f"Nenhuma movimentação encontrada para o período selecionado ("
+              f"{periodo_filtro})."
+          )
+        else:
+          # Organizar colunas para exibição clara
+          colunas_exibir = [
+              "Data/Hora",
+              "Tipo",
+              "Lote",
+              "Quantidade",
+              "Origem",
+              "Destino",
+              "Responsável",
+          ]
+          mov_id_exibir = mov_id[colunas_exibir].sort_values(
+              by="Data/Hora", ascending=False
+          )
+
+          st.dataframe(mov_id_exibir, use_container_width=True)
+
+          # Métricas de Resumo do Período
+          entradas_totais = mov_id[
+              mov_id["Tipo"].str.contains("Entrada|Devolução", case=False, na=False)
+          ]["Quantidade"].sum()
+          saidas_totais = mov_id[
+              mov_id["Tipo"].str.contains("Saída|Entrega", case=False, na=False)
+          ]["Quantidade"].sum()
+
+          c_m1, c_m2 = st.columns(2)
+          with c_m1:
+            st.metric(
+                f"📥 Total Entradas ({periodo_filtro})",
+                f"{entradas_totais:,.2f} {unidade_mat}",
+            )
+          with c_m2:
+            st.metric(
+                f"📤 Total Saídas ({periodo_filtro})",
+                f"{saidas_totais:,.2f} {unidade_mat}",
+            )
+
+          csv_hist = mov_id_exibir.to_csv(index=False).encode("utf-8")
+          st.download_button(
+              label=f"📥 Baixar Histórico de {id_selecionado} (CSV)",
+              data=csv_hist,
+              file_name=f"historico_{id_selecionado}.csv",
+              mime="text/csv",
+          )
 
 elif escolha == "⚙️ Habilitar / Desabilitar IDs por Área":
   st.subheader("⚙️ Controle de Visibilidade e Ativação de IDs por Área")
   if df.empty:
-    st.warning("Cadastre itens no Cadastro Mestre primeiro.")
+    st.warning("Cadastre itens primeiro.")
   else:
     ids_cadastrados = df["ID"].unique()
     area_config = st.selectbox("Selecione a Área para Configurar", areas_reais)
@@ -920,7 +987,6 @@ elif escolha == "⚙️ Habilitar / Desabilitar IDs por Área":
 
 elif escolha == "🆕 Cadastro Mestre (Galpão)":
   st.subheader("➕ Cadastro Mestre de Novo Material (Galpão)")
-
   with st.form("form_mestre", clear_on_submit=True):
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -935,7 +1001,6 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
           "⏳ Validade (Dias)", min_value=1, value=365
       )
 
-    st.markdown("---")
     c4, c5, c6, c7 = st.columns(4)
     with c4:
       qtd_ext = st.number_input("Qtd Externa", min_value=0.1, value=1.0)
@@ -958,11 +1023,6 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
     un_final = st.selectbox("📏 Unidade Final", ["KG", "UN", "L", "M", "M²"])
 
     total_calculado = qtd_ext * qtd_int_ext * medida_int
-    st.info(
-        f"💡 **Volume Calculado Inicial no Galpão:** {total_calculado:,.2f}"
-        f" {un_final}"
-    )
-
     salvar_btn = st.form_submit_button("💾 Salvar Cadastro no Galpão")
 
     if salvar_btn:
@@ -1017,24 +1077,17 @@ elif escolha == "🆕 Cadastro Mestre (Galpão)":
         )
 
 elif escolha == "🛠️ Cadastro de Combo (Produto Acabado)":
-  st.subheader("🛠️ Cadastro de Combo / Ficha Técnica (Múltiplos IDs por Produto)")
-  st.markdown(
-      "Cadastre o código de 7 caracteres para identificar o produto acabado e"
-      " defina os insumos consumidos da Oficina de Revestimento."
-  )
-
+  st.subheader("🛠️ Cadastro de Combo / Ficha Técnica")
   if df.empty:
     st.warning("Cadastre materiais no Cadastro Mestre primeiro.")
   else:
     with st.form("form_combo"):
       codigo_7 = st.text_input(
-          "🔑 Código do Combo (Exatamente 7 Caracteres: Ex: PA00001, ABC1234) *"
+          "🔑 Código do Combo (Exatamente 7 Caracteres) *"
       )
       nome_produto = st.text_input("📝 Nome do Produto Acabado *")
 
-      st.markdown("### Selecione os Insumos e Quantidades Usadas")
       ids_disponiveis = df["ID"].unique()
-
       c1, c2 = st.columns(2)
       with c1:
         id1 = st.selectbox("Insumo 1 (ID)", ["NENHUM"] + list(ids_disponiveis))
@@ -1048,22 +1101,18 @@ elif escolha == "🛠️ Cadastro de Combo (Produto Acabado)":
         qtd4 = st.number_input("Qtd Insumo 4", min_value=0.0, value=0.0)
 
       salvar_combo_btn = st.form_submit_button("💾 Salvar Ficha do Combo")
-
       if salvar_combo_btn:
         codigo_limpo = codigo_7.strip()
         if len(codigo_limpo) != 7:
           st.error(
-              "❌ O código do combo deve conter exatamente **7 caracteres**"
-              f" (digitados: {len(codigo_limpo)})."
+              "❌ O código do combo deve conter exatamente **7 caracteres**."
           )
         elif not nome_produto:
           st.error("❌ Informe o nome do produto acabado.")
         else:
           combo_df = combo_df[combo_df["Codigo_Combo"] != codigo_limpo]
-
           novas_linhas = []
-          selecoes = [(id1, qtd1), (id2, qtd2), (id3, qtd3), (id4, qtd4)]
-          for iid, q in selecoes:
+          for iid, q in [(id1, qtd1), (id2, qtd2), (id3, qtd3), (id4, qtd4)]:
             if iid != "NENHUM" and q > 0:
               novas_linhas.append({
                   "Codigo_Combo": codigo_limpo.upper(),
@@ -1071,46 +1120,27 @@ elif escolha == "🛠️ Cadastro de Combo (Produto Acabado)":
                   "ID_Insumo": iid,
                   "Qtd_Utilizada": q,
               })
-
           if not novas_linhas:
-            st.error(
-                "❌ Selecione pelo menos um insumo válido com quantidade maior"
-                " que zero."
-            )
+            st.error("❌ Selecione pelo menos um insumo válido.")
           else:
-            df_novos_combos = pd.DataFrame(novas_linhas)
             st.session_state.combo_df = pd.concat(
-                [combo_df, df_novos_combos], ignore_index=True
+                [combo_df, pd.DataFrame(novas_linhas)], ignore_index=True
             )
             salvar_dados()
             st.success(
-                f"✅ Combo **{codigo_limpo.upper()} ({nome_produto})** cadastrado"
-                " com sucesso!"
+                f"✅ Combo **{codigo_limpo.upper()} ({nome_produto})**"
+                " cadastrado com sucesso!"
             )
 
-  st.markdown("---")
-  st.markdown("### 📋 Combos Cadastrados Atualmente")
   if not combo_df.empty:
     st.dataframe(combo_df, use_container_width=True)
-  else:
-    st.info("Nenhum combo cadastrado.")
 
 elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
-  st.subheader(
-      "⚡ Baixa de Expedição e Produção (Leitura de 7 Caracteres) — Insumos"
-      " Retirados Definitivamente do Estoque"
-  )
-  st.markdown(
-      "Digite ou bipe o código de **7 caracteres** do produto acabado entregue."
-      " O sistema baixará os insumos da **Oficina de Revestimento**, os"
-      " retirará do estoque geral e registrará a expedição."
-  )
-
+  st.subheader("⚡ Baixa de Expedição e Produção (7 Caracteres)")
   if combo_df.empty:
-    st.warning("Cadastre ao menos um Combo na aba anterior primeiro.")
+    st.warning("Cadastre ao menos um Combo na aba anterior.")
   else:
     combos_cadastrados = combo_df["Codigo_Combo"].unique()
-
     with st.form("form_baixa_combo"):
       codigo_input = st.text_input(
           "🔍 Digite ou Escaneie o Código (Exatamente 7 Caracteres) *"
@@ -1123,25 +1153,15 @@ elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
       executar_baixa = st.form_submit_button(
           "🚀 Confirmar Entrega / Baixa Definitiva do Estoque"
       )
-
       if executar_baixa:
         cod_limpo = codigo_input.strip().upper()
-
         if len(cod_limpo) != 7:
-          st.error(
-              "❌ O código informado possui "
-              f"{len(cod_limpo)} caractere(s). O sistema exige exatamente"
-              " **7 caracteres**."
-          )
+          st.error("❌ O código exige exatamente **7 caracteres**.")
         elif cod_limpo not in combos_cadastrados:
-          st.error(
-              f"❌ O código **{cod_limpo}** não foi encontrado nos combos"
-              " cadastrados."
-          )
+          st.error(f"❌ O código **{cod_limpo}** não foi encontrado.")
         else:
           itens_combo = combo_df[combo_df["Codigo_Combo"] == cod_limpo]
           nome_prod_acabado = itens_combo["Nome_Produto_Acabado"].iloc[0]
-
           oficina_nome = areas_reais[1]
           falta_saldo = False
           msg_erro = ""
@@ -1149,34 +1169,30 @@ elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
           for _, row in itens_combo.iterrows():
             ins_id = row["ID_Insumo"]
             qtd_nec = row["Qtd_Utilizada"]
-
             estoque_oficina_item = df[
                 (df["ID"] == ins_id) & (df["Área"] == oficina_nome)
             ]
-            saldo_atual_oficina = (
+            saldo_atual = (
                 estoque_oficina_item["Total Geral"].sum()
                 if not estoque_oficina_item.empty
                 else 0.0
             )
-
-            if saldo_atual_oficina < qtd_nec:
+            if saldo_atual < qtd_nec:
               falta_saldo = True
               msg_erro += (
                   f"<br>• ID **{ins_id}**: Necessário {qtd_nec:,.2f} | Disponível"
-                  f" na Oficina: {saldo_atual_oficina:,.2f}"
+                  f" na Oficina: {saldo_atual:,.2f}"
               )
 
           if falta_saldo:
             st.error(
-                "❌ **Saldo insuficiente na Oficina de Revestimento para"
-                f" entregar {nome_prod_acabado}!**"
+                f"❌ **Saldo insuficiente na Oficina para {nome_prod_acabado}!**"
                 f"{msg_erro}"
             )
           else:
             for _, row in itens_combo.iterrows():
               ins_id = row["ID_Insumo"]
               qtd_nec = row["Qtd_Utilizada"]
-
               restante_baixar = qtd_nec
               idxs_oficina = df[
                   (df["ID"] == ins_id)
@@ -1216,9 +1232,8 @@ elif escolha == "⚡ Baixa por Entrega / Produção (7 Caracteres)":
             st.session_state.estoque_df = df
             salvar_dados()
             st.success(
-                f"✅ Produto acabado **{nome_prod_acabado}** entregue com"
-                f" sucesso (Código: **{cod_limpo}**)! Os insumos foram"
-                " retirados definitivamente do estoque geral por ID."
+                f"✅ Produto acabado **{nome_prod_acabado}** entregue e insumos"
+                " baixados com sucesso!"
             )
             st.rerun()
 
@@ -1232,7 +1247,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
     area_operacao = st.selectbox(
         "Selecione a Área de Origem da Operação", areas_reais
     )
-
     ids_habilitados = perm_df[
         (perm_df["Área"] == area_operacao) & (perm_df["Ativo"] == True)
     ]["ID"].unique()
@@ -1241,10 +1255,7 @@ elif escolha == "🔄 Movimentações Cruzadas":
     ]
 
     if df_disponivel.empty:
-      st.warning(
-          f"Nenhum ID habilitado ou com saldo disponível na área"
-          f" **{area_operacao}**."
-      )
+      st.warning(f"Nenhum ID habilitado na área **{area_operacao}**.")
     else:
       item_op = st.selectbox(
           "Selecione o Material / Lote",
@@ -1255,7 +1266,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
           + df_disponivel["Lote"]
           + ")",
       )
-
       id_sel = item_op.split(" - ")[0]
       lote_sel = item_op.split("Lote: ")[1].split(")")[0]
 
@@ -1267,11 +1277,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
       max_qtd = reg_item["Total Geral"]
       unidade = reg_item["Unidade Final"]
 
-      st.info(
-          f"📍 **Origem Atual:** {area_operacao} | 📦 **Saldo Disponível no"
-          f" Lote:** {max_qtd:,.2f} {unidade}"
-      )
-
       c_m1, c_m2 = st.columns(2)
       with c_m1:
         tipo_op = st.selectbox(
@@ -1282,7 +1287,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
         qtd_mov = st.number_input(
             f"Quantidade ({unidade})", min_value=0.01, value=1.0
         )
-
       responsavel = st.text_input("👤 Responsável pela Operação", value="Almoxarife")
 
       if st.button("⚡ Executar Operação Cruzada"):
@@ -1291,7 +1295,6 @@ elif escolha == "🔄 Movimentações Cruzadas":
             & (df["Lote"] == lote_sel)
             & (df["Área"] == area_operacao)
         ].index[0]
-
         galpao_nome = areas_reais[0]
         oficina_nome = areas_reais[1]
         sala_anexa_nome = areas_reais[2]
@@ -1300,15 +1303,12 @@ elif escolha == "🔄 Movimentações Cruzadas":
           if qtd_mov > max_qtd:
             st.error("❌ Erro: Quantidade solicitada excede o saldo atual!")
             st.stop()
-
           df.loc[idx_origem, "Total Geral"] -= qtd_mov
-
-          if area_operacao == galpao_nome:
-            destino_automatico = oficina_nome
-          elif area_operacao == sala_anexa_nome:
-            destino_automatico = oficina_nome
-          else:
-            destino_automatico = galpao_nome
+          destino_automatico = (
+              oficina_nome
+              if area_operacao in [galpao_nome, sala_anexa_nome]
+              else galpao_nome
+          )
 
           ja_existe_dest = df[
               (df["ID"] == id_sel)
@@ -1324,35 +1324,19 @@ elif escolha == "🔄 Movimentações Cruzadas":
             nova_linha_d["Total Geral"] = qtd_mov
             df = pd.concat([df, pd.DataFrame([nova_linha_d])], ignore_index=True)
 
-          tipo_hist = f"📤 Saída de {area_operacao} ➔ 📥 Entrada Automática em {destino_automatico}"
+          tipo_hist = f"📤 Saída de {area_operacao} ➔ 📥 Entrada em {destino_automatico}"
           destino_reg = destino_automatico
 
         elif "Entrada" in tipo_op:
           df.loc[idx_origem, "Total Geral"] += qtd_mov
-          if area_operacao == oficina_nome:
-            galpao_item = df[
-                (df["ID"] == id_sel)
-                & (df["Lote"] == lote_sel)
-                & (df["Área"] == galpao_nome)
-            ]
-            if not galpao_item.empty:
-              idx_g = galpao_item.index[0]
-              df.loc[idx_g, "Total Geral"] = max(
-                  0.0, df.loc[idx_g, "Total Geral"] - qtd_mov
-              )
-
           tipo_hist = "📥 Entrada com Ajuste Automático"
           destino_reg = area_operacao
-          area_operacao = "Fornecedor / Ajuste"
-
         else:
           df.loc[idx_origem, "Total Geral"] += qtd_mov
           tipo_hist = "↩️ Devolução"
           destino_reg = area_operacao
-          area_operacao = "Setor Consumidor"
 
         st.session_state.estoque_df = df
-
         nova_mov = pd.DataFrame([{
             "Data/Hora": get_now_br(),
             "ID": id_sel,
@@ -1367,41 +1351,11 @@ elif escolha == "🔄 Movimentações Cruzadas":
         st.session_state.mov_df = pd.concat(
             [mov_df, nova_mov], ignore_index=True
         )
-
         salvar_dados()
-        st.success(f"✅ Operação cruzada executada com sucesso!")
+        st.success("✅ Operação cruzada executada com sucesso!")
         st.rerun()
 
   st.markdown("---")
-  st.markdown("### 📜 Histórico de Auditoria Cruzada")
-  if mov_df.empty:
-    st.info("Nenhuma movimentação registrada.")
-  else:
+  st.markdown("### 📜 Histórico Geral de Auditoria")
+  if not mov_df.empty:
     st.dataframe(mov_df, use_container_width=True)
-
-elif escolha == "📊 Gráficos & Linha do Tempo":
-  st.subheader("📊 Gráficos Analíticos e Soma Geral por ID")
-  if df.empty:
-    st.info("Cadastre dados para visualizar os relatórios.")
-  else:
-    c_g1, c_g2 = st.columns(2)
-    with c_g1:
-      st.markdown("#### 📊 Volume Total Consolidado por ID")
-      df_chart = df.groupby("ID")["Total Geral"].sum().reset_index()
-      st.bar_chart(df_chart, x="ID", y="Total Geral")
-
-    with c_g2:
-      st.markdown("#### 🏢 Soma de Estoque por Área")
-      df_area_chart = df.groupby("Área")["Total Geral"].sum().reset_index()
-      st.bar_chart(df_area_chart, x="Área", y="Total Geral")
-
-    st.markdown("---")
-    st.markdown("### 🕒 Linha do Tempo por ID")
-    if not mov_df.empty:
-      id_timeline = st.selectbox(
-          "Selecione o ID para auditoria cronológica", mov_df["ID"].unique()
-      )
-      df_tl = mov_df[mov_df["ID"] == id_timeline]
-      st.dataframe(df_tl, use_container_width=True)
-    else:
-      st.info("Sem movimentações para gerar linha do tempo.")
