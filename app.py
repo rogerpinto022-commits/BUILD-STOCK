@@ -5,27 +5,51 @@ import datetime
 st.set_page_config(page_title="BUILD STOCK BR", page_icon="📦", layout="wide")
 
 # ==========================================
-# BASE DE DADOS COMPLETA (17 ITENS OFICIAIS)
+# CATÁLOGO BASE DETALHADO (LISTA COMPLETA)
 # ==========================================
 if "cat" not in st.session_state:
     st.session_state.cat = pd.DataFrame([
-        {"ID": "ID-1", "Material": "Cimento Lafarge Fondu", "Unidade": "KG"},
+        {"ID": "ID-1", "Material": "Cimento Lafarge Fondu (09/07/25_1400kg)", "Unidade": "KG"},
         {"ID": "ID-2", "Material": "Carbeto de Silicio", "Unidade": "KG"},
-        {"ID": "ID-3", "Material": "Argamassa Refratária Tecnofire / Placibar", "Unidade": "KG"},
-        {"ID": "ID-4", "Material": "Castibar Psi UG", "Unidade": "KG"},
-        {"ID": "ID-5", "Material": "Lã de Rocha Ibar", "Unidade": "UN"},
-        {"ID": "ID-6", "Material": "Tijolo Semi Isolante Supra", "Unidade": "UN"},
-        {"ID": "ID-7", "Material": "Tijolo Isolante Skamol / Mosconi", "Unidade": "UN"},
-        {"ID": "ID-8", "Material": "Tijolo Refratário Vários Tipos", "Unidade": "UN"},
-        {"ID": "ID-9", "Material": "Material Auxiliar / Outros", "Unidade": "KG"},
-        {"ID": "ID-10", "Material": "Aditivo / Diversos", "Unidade": "L"},
-        {"ID": "ID-11", "Material": "Chamote Ibar / TecFire", "Unidade": "KG"},
-        {"ID": "ID-12", "Material": "Pasta Fria (Elken / Remendo / Carbon)", "Unidade": "KG"},
-        {"ID": "ID-13", "Material": "Material Auxiliar ID-13", "Unidade": "UN"},
+        {"ID": "ID-3", "Material": "Argamassa Refratária Tecnofire 50S (1200kg)", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "Argamassa Refratária Tecnofire 50S (400kg)", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "Argamassa Refratária Placibar SG (1250kg)", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "Argamassa Refratária Placibar SG (1000kg)", "Unidade": "KG"},
+        {"ID": "ID-4", "Material": "Castibar Psi UG (1250kg)", "Unidade": "KG"},
+        {"ID": "ID-4", "Material": "Castibar Psi UG (1000kg)", "Unidade": "KG"},
+        {"ID": "ID-5", "Material": "Lã de Rocha Ibar Sem Corte", "Unidade": "UN"},
+        {"ID": "ID-5", "Material": "Lã de Rocha Ibar Cortado", "Unidade": "UN"},
+        {"ID": "ID-6", "Material": "Tijolo Semi Isolante Supra Skamol Aluporos-910", "Unidade": "UN"},
+        {"ID": "ID-6", "Material": "Tijolo Semi Isolante Supra Mosconi AB70-1020", "Unidade": "UN"},
+        {"ID": "ID-7", "Material": "Tijolo Isolante Skamol Aluporos 912", "Unidade": "UN"},
+        {"ID": "ID-7", "Material": "Tijolo Isolante Mosconi AB 55-680", "Unidade": "UN"},
+        {"ID": "ID-8", "Material": "Tijolo Refratário SA Alum 512", "Unidade": "UN"},
+        {"ID": "ID-8", "Material": "Tijolo Refratário Vesuvius 336", "Unidade": "UN"},
+        {"ID": "ID-8", "Material": "Tijolo Refratário Vesuvius 416 [China]", "Unidade": "UN"},
+        {"ID": "ID-8", "Material": "Tijolo Refratário Vesuvius 296 [China]", "Unidade": "UN"},
+        {"ID": "ID-11", "Material": "Chamote Ibar", "Unidade": "KG"},
+        {"ID": "ID-11", "Material": "Chamote TecFire", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Elken T30 - Remendo 74630_74631", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Remendo 75074_75075 a 75085_75087", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria 75949_75952", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria 76007_76010", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Elken 76323_76328", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Elken 76069_76086", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Lotes 76030_76037 e 76062_76067", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Carbon Lote 759", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "Pasta Fria Carbon Lote 763", "Unidade": "KG"},
+        {"ID": "ID-13", "Material": "Item Auxiliar ID-13", "Unidade": "UN"},
         {"ID": "ID-14", "Material": "Blocos Lateral Carbon", "Unidade": "CX"},
-        {"ID": "ID-15", "Material": "Blocos Engusados / Fundo", "Unidade": "UN"},
-        {"ID": "ID-16", "Material": "Barras Catódicas", "Unidade": "UN"},
-        {"ID": "ID-17", "Material": "Blocos de Fundo Sec", "Unidade": "UN"}
+        {"ID": "ID-15", "Material": "Blocos Engusados/Fundo Anexa Sec", "Unidade": "UN"},
+        {"ID": "ID-15", "Material": "Blocos Engusados/Fundo Barracão Sec", "Unidade": "UN"},
+        {"ID": "ID-15", "Material": "Blocos Engusados/Fundo Barracão Bloco de Fundo Energopron", "Unidade": "UN"},
+        {"ID": "ID-15", "Material": "Blocos Engusados/Fundo Barracão Blocos de Fundo Tokaycobex", "Unidade": "UN"},
+        {"ID": "ID-16", "Material": "Barras Catódicas Anexa", "Unidade": "UN"},
+        {"ID": "ID-16", "Material": "Barras Catódicas Barracão", "Unidade": "UN"},
+        {"ID": "ID-16", "Material": "Barras Catódicas Barracão Teste", "Unidade": "UN"},
+        {"ID": "ID-17", "Material": "Blocos de Fundo Sec Barracão", "Unidade": "UN"},
+        {"ID": "ID-17", "Material": "Blocos de Fundo Sec Barracão Tokaycobex", "Unidade": "UN"},
+        {"ID": "ID-17", "Material": "Blocos de Fundo Sec Anexa", "Unidade": "UN"}
     ])
 
 cat = st.session_state.cat
@@ -136,14 +160,14 @@ elif menu == "Movimentações (Entrada/Saída)":
 
 # 3. CADASTRO BASE
 elif menu == "Cadastro Base de Itens":
-    st.header("📋 Cadastro Base de Materiais (17 Itens)")
+    st.header("📋 Cadastro Base de Materiais (Detalhado)")
     st.dataframe(cat[["ID", "Material", "Unidade"]], use_container_width=True)
     
     with st.form("novo_item"):
         st.subheader("Adicionar Novo Item na Base")
         novo_id = st.text_input("ID (Ex: ID-18)")
-        novo_mat = st.text_input("Nome do Material")
-        nova_un = st.text_input("Unidade (Ex: KG, UN, M2)")
+        novo_mat = st.text_input("Nome do Material / Especificação")
+        nova_un = st.text_input("Unidade (Ex: KG, UN, M2, CX)")
         add_submitted = st.form_submit_button("Cadastrar Item")
         if add_submitted and novo_id and novo_mat:
             novo_registro = pd.DataFrame([{"ID": novo_id, "Material": novo_mat, "Unidade": nova_un}])
