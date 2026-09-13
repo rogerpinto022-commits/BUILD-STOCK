@@ -1,6 +1,2 @@
 streamlit
-supabase
 pandas
-plotly
-pytz
-streamlit-autorefresh
