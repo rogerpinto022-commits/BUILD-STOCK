@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import datetime
@@ -8,7 +7,7 @@ st.set_page_config(page_title="BUILD STOCK BR", page_icon="📦", layout="wide")
 LOCAIS = ["Galpão de Materiais", "Sala Anexa", "Oficina de Revestimento"]
 
 # ==========================================
-# 1. CADASTRO BASE DE ITENS (LISTA COMPLETA COM 17 ITENS)
+# 1. CADASTRO BASE DE ITENS (LISTA COMPLETA COM OS 17 ITENS OFICIAIS)
 # ==========================================
 if "cat" not in st.session_state:
     st.session_state.cat = pd.DataFrame([
