@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import datetime
@@ -7,23 +8,31 @@ st.set_page_config(page_title="BUILD STOCK BR", page_icon="📦", layout="wide")
 LOCAIS = ["Galpão de Materiais", "Sala Anexa", "Oficina de Revestimento"]
 
 # ==========================================
-# 1. CADASTRO BASE DE ITENS
+# 1. CADASTRO BASE DE ITENS (LISTA COMPLETA COM 17 ITENS)
 # ==========================================
 if "cat" not in st.session_state:
     st.session_state.cat = pd.DataFrame([
         {"ID": 1, "Material": "CIMENTO LAFARGE FONDU", "Lote": "09/07/25_1400kg", "Fabricacao": "2025-07-09", "Validade": "12 Meses", "Unidade": "KG", "QtdPorPalete": 1400.0, "Status": "Ativo"},
         {"ID": 2, "Material": "CARBETO DE SILICIO", "Lote": "LOTE-CS-1000", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"},
         {"ID": 3, "Material": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S (1200kg)", "Lote": "TEC-50S-1200", "Fabricacao": "2025-02-01", "Validade": "6 Meses", "Unidade": "KG", "QtdPorPalete": 1200.0, "Status": "Ativo"},
-        {"ID": 4, "Material": "CASTIBAR PSI UG (1250kg)", "Lote": "CAST-UG-1250", "Fabricacao": "2025-03-01", "Validade": "12 Meses", "Unidade": "KG", "QtdPorPalete": 1250.0, "Status": "Ativo"},
-        {"ID": 5, "Material": "LÃ DE ROCHA IBAR SEM CORTE", "Lote": "LA-ROCHA-SC", "Fabricacao": "2025-01-01", "Validade": "Indeterminada", "Unidade": "UN", "QtdPorPalete": 1.0, "Status": "Ativo"},
-        {"ID": 6, "Material": "TIJOLO SEMI ISOLANTE SUPRA SKAMOL", "Lote": "SKAMOL-910", "Fabricacao": "2025-01-15", "Validade": "Indeterminada", "Unidade": "UN", "QtdPorPalete": 1.0, "Status": "Ativo"},
+        {"ID": 4, "Material": "ARGAMASSA REFRATÁRIA PLACIBAR SG (1000kg)", "Lote": "PLAC-SG-1000", "Fabricacao": "2025-02-06", "Validade": "6 Meses", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"},
+        {"ID": 5, "Material": "CASTIBAR PSI UG (1250kg)", "Lote": "CAST-UG-1250", "Fabricacao": "2025-03-01", "Validade": "12 Meses", "Unidade": "KG", "QtdPorPalete": 1250.0, "Status": "Ativo"},
+        {"ID": 6, "Material": "LÃ DE ROCHA IBAR SEM CORTE", "Lote": "LA-ROCHA-SC", "Fabricacao": "2025-01-01", "Validade": "Indeterminada", "Unidade": "UN", "QtdPorPalete": 1.0, "Status": "Ativo"},
+        {"ID": 7, "Material": "TIJOLO SEMI ISOLANTE SUPRA SKAMOL ALUPOROS-910", "Lote": "SKAMOL-910", "Fabricacao": "2025-01-15", "Validade": "Indeterminada", "Unidade": "UN", "QtdPorPalete": 1.0, "Status": "Ativo"},
+        {"ID": 8, "Material": "TIJOLO REFRATÁRIO ALUMINA AL-70", "Lote": "AL-70-LOTE", "Fabricacao": "2025-01-20", "Validade": "Indeterminada", "Unidade": "UN", "QtdPorPalete": 1.0, "Status": "Ativo"},
+        {"ID": 9, "Material": "CONCRETO REFRATÁRIO ISOLANTE", "Lote": "CONC-ISOL", "Fabricacao": "2025-01-25", "Validade": "6 Meses", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"},
+        {"ID": 10, "Material": "FIBRA CERÂMICA MANTA 128kg/m³", "Lote": "FIBRA-128", "Fabricacao": "2025-02-10", "Validade": "Indeterminada", "Unidade": "RL", "QtdPorPalete": 1.0, "Status": "Ativo"},
         {"ID": 11, "Material": "CHAMOTE IBAR", "Lote": "CHAMOTE-IBAR", "Fabricacao": "2025-03-01", "Validade": "Indeterminada", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"},
-        {"ID": 12, "Material": "PASTA FRIA ELKEN T30", "Lote": "74630_74631", "Fabricacao": "2025-03-10", "Validade": "3 Meses", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"}
+        {"ID": 12, "Material": "PASTA FRIA ELKEN T30", "Lote": "74630_74631", "Fabricacao": "2025-03-10", "Validade": "3 Meses", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"},
+        {"ID": 13, "Material": "PÓ DE GRAFITE INDUSTRIAL", "Lote": "GRAFITE-IND", "Fabricacao": "2025-03-15", "Validade": "Indeterminada", "Unidade": "KG", "QtdPorPalete": 500.0, "Status": "Ativo"},
+        {"ID": 14, "Material": "BLOCOS LATERAL CARBON", "Lote": "BL-CARBON", "Fabricacao": "2025-01-05", "Validade": "Indeterminada", "Unidade": "CX", "QtdPorPalete": 1.0, "Status": "Ativo"},
+        {"ID": 15, "Material": "ARGAMASSA DURAFIRE C", "Lote": "DURA-C", "Fabricacao": "2025-04-01", "Validade": "6 Meses", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"},
+        {"ID": 16, "Material": "ANCORAGEM METÁLICA REFRATÁRIA", "Lote": "ANCOR-MET", "Fabricacao": "2025-04-05", "Validade": "Indeterminada", "Unidade": "PC", "QtdPorPalete": 1.0, "Status": "Ativo"},
+        {"ID": 17, "Material": "PREMIX REFRATÁRIO ESPECIAL", "Lote": "PREMIX-ESP", "Fabricacao": "2025-04-10", "Validade": "6 Meses", "Unidade": "KG", "QtdPorPalete": 1000.0, "Status": "Ativo"}
     ])
 
 # ==========================================
 # 2. CONTROLE DE HABILITAÇÃO POR LOCAL (MATRIZ)
-# Cada item cadastrado ganha automaticamente permissão (True/False) em cada local
 # ==========================================
 if "permissoes_locais" not in st.session_state:
     perm_dict = []
@@ -33,7 +42,7 @@ if "permissoes_locais" not in st.session_state:
                 "ID": row["ID"],
                 "Material": row["Material"],
                 "Local": loc,
-                "Habilitado": True # Por padrão, nasce habilitado em todos os locais
+                "Habilitado": True
             })
     st.session_state.permissoes_locais = pd.DataFrame(perm_dict)
 
@@ -62,7 +71,7 @@ df_mov = st.session_state.movimentacoes
 if menu == "Consulta Dinâmica & Estoque":
     st.header("📊 Saldo Consolidado por Local e Status de Habilitação")
     
-    with st.expander("📌 Visualizar Cadastro Base"):
+    with st.expander("📌 Visualizar Cadastro Base (17 Itens)"):
         st.dataframe(cat, use_container_width=True)
         
     if not df_mov.empty:
@@ -76,7 +85,6 @@ if menu == "Consulta Dinâmica & Estoque":
                 
                 saldo_local = entradas - saidas
                 
-                # Verifica se está habilitado neste local
                 status_hab = df_perm[(df_perm["ID"] == id_item) & (df_perm["Local"] == local)]
                 hab_str = "Habilitado ✅" if (not status_hab.empty and status_hab.iloc[0]["Habilitado"]) else "Desabilitado ❌"
                 
@@ -110,7 +118,6 @@ elif menu == "Habilitação de Materiais por Local":
     
     st.subheader(f"Lista de Materiais para: {local_escolhido}")
     
-    # Filtra as permissões deste local
     idx_local = df_perm[df_perm["Local"] == local_escolhido].index
     
     with st.form("form_habilitacao"):
@@ -139,7 +146,6 @@ elif menu == "Movimentações & Transferências":
     with col2:
         tipo_mov = st.selectbox("Tipo de Operação:", ["Entrada (Recebimento)", "Transferência para Outro Local", "Saída Simples (Baixa)"])
         
-    # Pega apenas os IDs habilitados neste local específico
     ids_habilitados_neste_local = df_perm[(df_perm["Local"] == local_origem) & (df_perm["Habilitado"] == True)]["ID"].tolist()
     cat_filtrado = cat[cat["ID"].isin(ids_habilitados_neste_local)]
     
@@ -162,7 +168,6 @@ elif menu == "Movimentações & Transferências":
             locais_possiveis = [l for l in LOCAIS if l != local_origem]
             destino_transf = st.selectbox("Local de Destino da Transferência:", locais_possiveis)
             
-            # Valida se o item está habilitado no destino também
             dest_hab = df_perm[(df_perm["ID"] == limpo_id) & (df_perm["Local"] == destino_transf) & (df_perm["Habilitado"] == True)]
             if dest_hab.empty:
                 st.warning(f"⚠️ **Atenção:** Este item está desabilitado no destino ({destino_transf}). Habilite-o na aba de Habilitação se desejar.")
@@ -175,7 +180,6 @@ elif menu == "Movimentações & Transferências":
                 fab_obj = datetime.date.today()
             fab_edit = st.date_input("Data de Fabricação", value=fab_obj)
             
-            # Operador digita apenas os paletes
             qtd_paletes = st.number_input("Quantidade de Paletes / Volumes:", min_value=0.1, value=1.0, step=0.5)
             qtd_calculada = qtd_paletes * fator_padrao
             
@@ -223,7 +227,6 @@ elif menu == "Saída de Produto Acabado (Oficina)":
         st.divider()
         st.subheader("🛒 Combo de Insumos Utilizados na Oficina")
         
-        # Pega materiais habilitados na Oficina
         ids_hab_oficina = df_perm[(df_perm["Local"] == "Oficina de Revestimento") & (df_perm["Habilitado"] == True)]["ID"].tolist()
         cat_oficina = cat[cat["ID"].isin(ids_hab_oficina)]
         
@@ -269,8 +272,8 @@ elif menu == "Cadastro Base de Itens":
     
     st.divider()
     with st.form("novo_item_base"):
-        st.subheader("➕ Adicionar Novo Item (Automaticamente Disponível para Habilitação nos Locais)")
-        novo_id = st.number_input("Número da ID", min_value=1, max_value=100, value=20, step=1)
+        st.subheader("➕ Adicionar Novo Item")
+        novo_id = st.number_input("Número da ID", min_value=1, max_value=100, value=18, step=1)
         novo_mat = st.text_input("Nome do Material")
         novo_lote = st.text_input("Lote Padrão")
         nova_fab = st.date_input("Data de Fabricação", value=datetime.date.today())
@@ -286,7 +289,6 @@ elif menu == "Cadastro Base de Itens":
             }])
             st.session_state.cat = pd.concat([st.session_state.cat, novo_df], ignore_index=True)
             
-            # Adiciona as permissões padrão para os 3 locais
             novas_perms = []
             for loc in LOCAIS:
                 novas_perms.append({"ID": int(novo_id), "Material": novo_mat, "Local": loc, "Habilitado": True})
