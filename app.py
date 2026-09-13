@@ -5,25 +5,25 @@ import datetime
 st.set_page_config(page_title="BUILD STOCK BR", page_icon="📦", layout="wide")
 
 # ==========================================
-# CADASTRO BASE PRONTO COM A SUA LISTA COMPLETA
+# CADASTRO BASE (FIXO, SEM DADOS DINÂMICOS)
 # ==========================================
 if "cat" not in st.session_state:
     st.session_state.cat = pd.DataFrame([
         # ID-1
-        {"ID": "ID-1", "Material": "CIMENTO LAFARGE FONDU 09/07/25_1400kg", "Lote": "09/07/25_1400kg", "Fabricacao": "2025-07-09", "Validade": "12 Meses", "Unidade": "KG"},
+        {"ID": "ID-1", "Material": "CIMENTO LAFARGE FONDU", "Lote": "09/07/25_1400kg", "Fabricacao": "2025-07-09", "Validade": "12 Meses", "Unidade": "KG"},
         
         # ID-2
-        {"ID": "ID-2", "Material": "CARBETO DE SILICIO 1000kg", "Lote": "LOTE-CS-1000", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "KG"},
+        {"ID": "ID-2", "Material": "CARBETO DE SILICIO", "Lote": "LOTE-CS-1000", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "KG"},
         
         # ID-3
-        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S-1200kg", "Lote": "TEC-50S-1200", "Fabricacao": "2025-02-01", "Validade": "6 Meses", "Unidade": "KG"},
-        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S-400kg", "Lote": "TEC-50S-400", "Fabricacao": "2025-02-02", "Validade": "6 Meses", "Unidade": "KG"},
-        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA PLACIBAR SG-1250kg", "Lote": "PLAC-SG-1250", "Fabricacao": "2025-02-05", "Validade": "6 Meses", "Unidade": "KG"},
-        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA PLACIBAR SG-1000kg", "Lote": "PLAC-SG-1000", "Fabricacao": "2025-02-06", "Validade": "6 Meses", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S (1200kg)", "Lote": "TEC-50S-1200", "Fabricacao": "2025-02-01", "Validade": "6 Meses", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA TECNOFIRE 50S (400kg)", "Lote": "TEC-50S-400", "Fabricacao": "2025-02-02", "Validade": "6 Meses", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA PLACIBAR SG (1250kg)", "Lote": "PLAC-SG-1250", "Fabricacao": "2025-02-05", "Validade": "6 Meses", "Unidade": "KG"},
+        {"ID": "ID-3", "Material": "ARGAMASSA REFRATÁRIA PLACIBAR SG (1000kg)", "Lote": "PLAC-SG-1000", "Fabricacao": "2025-02-06", "Validade": "6 Meses", "Unidade": "KG"},
         
         # ID-4
-        {"ID": "ID-4", "Material": "CASTIBAR PSI UG 1250kg", "Lote": "CAST-UG-1250", "Fabricacao": "2025-03-01", "Validade": "12 Meses", "Unidade": "KG"},
-        {"ID": "ID-4", "Material": "CASTIBAR PSI UG-1000kg", "Lote": "CAST-UG-1000", "Fabricacao": "2025-03-02", "Validade": "12 Meses", "Unidade": "KG"},
+        {"ID": "ID-4", "Material": "CASTIBAR PSI UG (1250kg)", "Lote": "CAST-UG-1250", "Fabricacao": "2025-03-01", "Validade": "12 Meses", "Unidade": "KG"},
+        {"ID": "ID-4", "Material": "CASTIBAR PSI UG (1000kg)", "Lote": "CAST-UG-1000", "Fabricacao": "2025-03-02", "Validade": "12 Meses", "Unidade": "KG"},
         
         # ID-5
         {"ID": "ID-5", "Material": "LÃ DE ROCHA IBAR SEM CORTE", "Lote": "LA-ROCHA-SC", "Fabricacao": "2025-01-01", "Validade": "Indeterminada", "Unidade": "UN"},
@@ -48,7 +48,7 @@ if "cat" not in st.session_state:
         {"ID": "ID-11", "Material": "CHAMOTE TecFire", "Lote": "CHAMOTE-TEC", "Fabricacao": "2025-03-01", "Validade": "Indeterminada", "Unidade": "KG"},
         
         # ID-12
-        {"ID": "ID-12", "Material": "PASTA FRIA ELKEN T30- REMENDO 74630_74631", "Lote": "74630_74631", "Fabricacao": "2025-03-10", "Validade": "3 Meses", "Unidade": "KG"},
+        {"ID": "ID-12", "Material": "PASTA FRIA ELKEN T30 - REMENDO 74630_74631", "Lote": "74630_74631", "Fabricacao": "2025-03-10", "Validade": "3 Meses", "Unidade": "KG"},
         {"ID": "ID-12", "Material": "PASTA FRIA REMENDO 75074_75075 A 75085_75087", "Lote": "75074-87", "Fabricacao": "2025-03-11", "Validade": "3 Meses", "Unidade": "KG"},
         {"ID": "ID-12", "Material": "PASTA FRIA 75949_75952", "Lote": "75949_75952", "Fabricacao": "2025-03-12", "Validade": "3 Meses", "Unidade": "KG"},
         {"ID": "ID-12", "Material": "PASTA FRIA 76007_76010", "Lote": "76007_76010", "Fabricacao": "2025-03-13", "Validade": "3 Meses", "Unidade": "KG"},
@@ -65,8 +65,8 @@ if "cat" not in st.session_state:
         {"ID": "ID-14", "Material": "BLOCOS LATERAL CARBON", "Lote": "BL-CARBON", "Fabricacao": "2025-01-05", "Validade": "Indeterminada", "Unidade": "CX"},
         
         # ID-15
-        {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS/FUNDO ANEXA BLOCOS ENGUSADOS SEC", "Lote": "ANEXA-SEC", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "UN"},
-        {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS/FUNDO BARRACAO BLOCOS ENGUSADOS SEC", "Lote": "BAR-SEC", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "UN"},
+        {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS/FUNDO ANEXA SEC", "Lote": "ANEXA-SEC", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "UN"},
+        {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS/FUNDO BARRACAO SEC", "Lote": "BAR-SEC", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "UN"},
         {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS/FUNDO BARRACAO BLOCO DE FUNDO ENERGOPRON", "Lote": "ENEROPRON", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "UN"},
         {"ID": "ID-15", "Material": "BLOCOS ENGUSADOS/FUNDO BARRACAO BLOCOS DE FUNDO TOKAYCOBEX", "Lote": "TOKAYCOBEX", "Fabricacao": "2025-01-10", "Validade": "Indeterminada", "Unidade": "UN"},
         
@@ -86,7 +86,7 @@ cat = st.session_state.cat
 
 if "movimentacoes" not in st.session_state:
     st.session_state.movimentacoes = pd.DataFrame(columns=[
-        "Data", "ID", "Material", "Tipo", "Quantidade", "Fabricação", "Lote", "Validade", "Área", "Responsável"
+        "Data/Hora", "ID", "Material", "Tipo", "Quantidade", "Fabricação", "Lote", "Validade", "Área", "Responsável"
     ])
 
 # ==========================================
@@ -144,52 +144,74 @@ if menu == "Consulta Dinâmica e Gráficos":
     else:
         st.info("Nenhuma movimentação registrada no sistema para os itens selecionados.")
 
-# 2. MOVIMENTAÇÕES (AUTO-PREENCHIMENTO POR ID)
+# 2. MOVIMENTAÇÕES (DIGITAÇÃO DA ID COM AUTO-PREENCHIMENTO)
 elif menu == "Movimentações (Entrada/Saída)":
-    st.header("🔄 Registrar Entrada ou Saída de Materiais")
+    st.header("🔄 Registrar Entrada ou Saída de Materiais por ID")
     
-    cat["Label"] = cat["ID"] + " — " + cat["Material"]
+    # Campo para digitar a ID (ex: ID-1, ID-3, ID-12)
+    id_digitada = st.text_input("DIGITE A ID (Ex: ID-1, ID-3, ID-12):", "").strip().upper()
     
-    with st.form("form_mov"):
-        id_escolhida = st.selectbox("SELECIONE O ID / MATERIAL", options=cat["Label"].tolist(), key="id_mov")
+    if id_digitada:
+        itens_encontrados = cat[cat["ID"] == id_digitada]
         
-        item_selecionado = cat[cat["Label"] == id_escolhida].iloc[0]
-        limpo_id = item_selecionado["ID"]
-        nome_mat = item_selecionado["Material"]
-        lote_auto = item_selecionado["Lote"]
-        fab_auto = item_selecionado["Fabricacao"]
-        val_auto = item_selecionado["Validade"]
-        
-        st.info(f"✨ **Dados preenchidos automaticamente pelo sistema:**\n\n"
-                f"- **Material:** {nome_mat}\n"
-                f"- **Lote:** {lote_auto}\n"
-                f"- **Data de Fabricação:** {fab_auto}\n"
-                f"- **Validade:** {val_auto}")
-        
-        tipo = st.selectbox("Tipo de Movimentação", ["Entrada", "Saída"])
-        qtd = st.number_input("Quantidade Movimentada", min_value=0.0, step=0.1)
-        area = st.text_input("Área / Local")
-        resp = st.text_input("Responsável")
-        
-        submitted = st.form_submit_button("Salvar Movimentação")
-        if submitted:
-            nova_linha = {
-                "Data": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "ID": limpo_id,
-                "Material": nome_mat,
-                "Tipo": tipo,
-                "Quantidade": qtd,
-                "Fabricação": fab_auto,
-                "Lote": lote_auto,
-                "Validade": val_auto,
-                "Área": area,
-                "Responsável": resp
-            }
-            st.session_state.movimentacoes = pd.concat(
-                [st.session_state.movimentacoes, pd.DataFrame([nova_linha])], 
-                ignore_index=True
-            )
-            st.success("Movimentação registrada com sucesso!")
+        if not itens_encontrados.empty:
+            st.success(f"ID Encontrada! Existem {len(itens_encontrados)} registro(s) vinculado(s) a ela.")
+            
+            # Se houver mais de um item cadastrado para a mesma ID, seleciona qual variação é
+            if len(itens_encontrados) > 1:
+                opcoes_mat = itens_encontrados["Material"].tolist()
+                material_escolhido = st.selectbox("Selecione a especificação exata deste ID:", options=opcoes_mat)
+                item_selecionado = itens_encontrados[itens_encontrados["Material"] == material_escolhido].iloc[0]
+            else:
+                item_selecionado = itens_encontrados.iloc[0]
+            
+            limpo_id = item_selecionado["ID"]
+            nome_mat = item_selecionado["Material"]
+            lote_auto = item_selecionado["Lote"]
+            fab_auto = item_selecionado["Fabricacao"]
+            val_auto = item_selecionado["Validade"]
+            unidade_auto = item_selecionado["Unidade"]
+            
+            # Exibe o que foi preenchido automaticamente pelo sistema
+            st.info(f"✨ **Dados Preenchidos Automaticamente pela ID:**\n\n"
+                    f"- **Material:** {nome_mat}\n"
+                    f"- **Lote:** {lote_auto}\n"
+                    f"- **Data de Fabricação:** {fab_auto}\n"
+                    f"- **Validade:** {val_auto}\n"
+                    f"- **Unidade:** {unidade_auto}")
+            
+            with st.form("form_mov_digitado"):
+                tipo = st.selectbox("Tipo de Movimentação", ["Entrada", "Saída"])
+                qtd = st.number_input(f"Quantidade Recebida / Movimentada ({unidade_auto})", min_value=0.0, step=0.1)
+                area = st.text_input("Área / Local")
+                resp = st.text_input("Responsável")
+                
+                submitted = st.form_submit_button("Salvar Movimentação")
+                if submitted:
+                    # Data e Hora geradas de forma 100% automática no momento do clique
+                    data_hora_atual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    
+                    nova_linha = {
+                        "Data/Hora": data_hora_atual,
+                        "ID": limpo_id,
+                        "Material": nome_mat,
+                        "Tipo": tipo,
+                        "Quantidade": qtd,
+                        "Fabricação": fab_auto,
+                        "Lote": lote_auto,
+                        "Validade": val_auto,
+                        "Área": area,
+                        "Responsável": resp
+                    }
+                    st.session_state.movimentacoes = pd.concat(
+                        [st.session_state.movimentacoes, pd.DataFrame([nova_linha])], 
+                        ignore_index=True
+                    )
+                    st.success(f"Movimentação registrada com sucesso em {data_hora_atual}!")
+        else:
+            st.error(f"Nenhum material encontrado com a ID '{id_digitada}'. Verifique se digitou corretamente (Ex: ID-1, ID-12).")
+    else:
+        st.info("👆 Digite a ID acima (ex: **ID-1** ou **ID-3**) para o sistema preencher os dados automaticamente.")
 
     st.subheader("📋 Histórico Geral de Lançamentos")
     if not st.session_state.movimentacoes.empty:
