@@ -1,258 +1,134 @@
 import streamlit as st
 import pandas as pd
-import json
-import os
-from datetime import datetime
-from collections import defaultdict
+from datetime import date, timedelta
+import plotly.express as px
 
-st.set_page_config(page_title="WMS 3 Áreas - Final", layout="wide", page_icon="🏭")
-
-DATA_FILE = "wms_data.json"
-
-def load_data():
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                d = json.load(f)
-                return d.get("estoque", []), d.get("movs", []), d.get("combos", [])
-        except:
-            return [], [], []
-    return [], [], []
-
-def save_data(estoque, movs, combos):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump({"estoque": estoque, "movs": movs, "combos": combos}, f, ensure_ascii=False, indent=2)
+st.set_page_config(page_title="BUILD STOCK - WMS PRO", layout="wide", page_icon="📦")
+st.title("📦 BUILD STOCK - WMS 3 ÁREAS | ID RASTREÁVEL")
 
 if "estoque" not in st.session_state:
-    est, movs, combos = load_data()
-    st.session_state.estoque = est
-    st.session_state.movs = movs
-    st.session_state.combos = combos
-    st.session_state.combo_temp = []
-    st.session_state.outros_temp = []
+    st.session_state.estoque = pd.DataFrame(columns=[
+        "ID_RASTREADOR","AREA","DESCRICAO","LOTE","FABRICACAO","VALIDADE_DIAS","VENCIMENTO",
+        "TIPO_EMBALAGEM","QTD_POR_EMBALAGEM","UN_MEDIDA","QTD_EMBALAGENS","TOTAL_UNIDADES",
+        "MOV_TIPO","DATA_MOV","STATUS"
+    ])
 
-estoque = st.session_state.estoque
-movs = st.session_state.movs
-combos = st.session_state.combos
+df = st.session_state.estoque
 
-st.markdown("## 🏭 WMS DEFINITIVO - 3 ÁREAS | 7 CHARS + OUTROS + MENSAL")
-st.caption("ENTRADA sempre GALPÃO → SAÍDA GALPÃO→SALA/OFICINA → DEVOLUÇÃO vice-versa → PRODUÇÃO 7 chars + OUTROS + Mensal")
+st.sidebar.header("📝 Movimentação")
+ids_existentes = ["+ NOVO ID"] + sorted(df["ID_RASTREADOR"].unique().tolist()) if not df.empty else ["+ NOVO ID"]
+escolha_id = st.sidebar.selectbox("🔖 ID RASTREADOR", ids_existentes)
 
-col1, col2, col3, col4, col5 = st.columns(5)
-galpao = sum(e["saldo"] for e in estoque if e["local"]=="GALPÃO DE MATERIAIS")
-sala = sum(e["saldo"] for e in estoque if e["local"]=="SALA ANEXA")
-oficina = sum(e["saldo"] for e in estoque if e["local"]=="OFICINA DE REVESTIMENTO")
-total_geral = sum(e["saldo"] for e in estoque)
-prod_por_mes = defaultdict(float)
-for m in movs:
-    if "PRODUÇÃO" in m.get("tipo",""):
-        prod_por_mes[m.get("mes","")] += m.get("qtd",0)
-mes_atual = datetime.now().strftime("%m/%Y")
-prod_mes = prod_por_mes.get(mes_atual, 0)
+dados_auto = {}
+if escolha_id!= "+ NOVO ID" and not df.empty:
+    ultimo = df[df["ID_RASTREADOR"] == escolha_id].iloc[-1]
+    dados_auto = ultimo.to_dict()
+    st.sidebar.success(f"ID {escolha_id} encontrado - auto preenchido")
+    id_final = escolha_id
+else:
+    id_final = st.sidebar.text_input("Digite o NOVO ID", placeholder="Ex: ID-001").upper()
 
-col1.metric("GALPÃO", galpao)
-col2.metric("SALA ANEXA", sala)
-col3.metric("OFICINA", oficina)
-col4.metric("TOTAL GERAL", total_geral)
-col5.metric(f"PROD {mes_atual}", int(prod_mes))
+mov_tipo = st.sidebar.selectbox("TIPO MOVIMENTAÇÃO", ["ENTRADA", "SAÍDA", "DEVOLUÇÃO"])
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📥 ENTRADA GALPÃO", "📤 SAÍDA GALPÃO→ÁREA", "↩️ DEVOLUÇÃO", "🧩 COMBOS 7 CHARS", "🏭 PRODUZIR 7c + OUTROS", "📊 ESTOQUE + MENSAL"])
-
-with tab1:
-    st.subheader("📥 ENTRADA - Sempre no GALPÃO (atualiza geral auto)")
-    c1, c2 = st.columns(2)
-    mat = c1.text_input("Material *", key="e_mat")
-    qtd = c2.number_input("Qtd *", min_value=0.0, key="e_qtd")
-    if st.button("DAR ENTRADA NO GALPÃO", type="primary"):
-        if not mat or qtd<=0:
-            st.error("Material e Qtd obrigatórios")
-        else:
-            ach = next((e for e in estoque if e["local"]=="GALPÃO DE MATERIAIS" and e["nome"].lower()==mat.lower()), None)
-            if ach:
-                ach["saldo"]+=qtd
-            else:
-                estoque.append({"local":"GALPÃO DE MATERIAIS","nome":mat.strip(),"saldo":qtd,"un":"UN","ts":datetime.now().isoformat()})
-            movs.insert(0,{"tipo":"ENTRADA","local":"GALPÃO DE MATERIAIS","mat":mat,"qtd":qtd,"data":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),"mes":mes_atual})
-            save_data(estoque,movs,combos)
-            st.success(f"Entrada: {mat} {qtd}")
-            st.rerun()
-
-with tab2:
-    st.subheader("📤 SAÍDA GALPÃO → SALA / OFICINA (auto)")
-    c1,c2,c3 = st.columns(3)
-    mat_s = c1.text_input("Material *", key="s_mat")
-    qtd_s = c2.number_input("Qtd *", min_value=0.0, key="s_qtd")
-    dest = c3.selectbox("Destino *", ["SALA ANEXA","OFICINA DE REVESTIMENTO"])
-    if mat_s:
-        total_g = sum(e["saldo"] for e in estoque if e["local"]=="GALPÃO DE MATERIAIS" and e["nome"].lower()==mat_s.lower())
-        st.info(f"No GALPÃO tem {total_g}")
-    if st.button("TRANSFERIR GALPÃO ➡️ ÁREA", type="primary"):
-        total = sum(e["saldo"] for e in estoque if e["local"]=="GALPÃO DE MATERIAIS" and e["nome"].lower()==mat_s.lower())
-        if total < qtd_s:
-            st.error(f"Só tem {total}")
-        else:
-            precisa = qtd_s
-            for e in [x for x in estoque if x["local"]=="GALPÃO DE MATERIAIS" and x["nome"].lower()==mat_s.lower()]:
-                tirar = min(e["saldo"], precisa)
-                e["saldo"]-=tirar
-                precisa-=tirar
-            st.session_state.estoque = [e for e in estoque if e["saldo"]>0]
-            estoque = st.session_state.estoque
-            d = next((e for e in estoque if e["local"]==dest and e["nome"].lower()==mat_s.lower()), None)
-            if d:
-                d["saldo"]+=qtd_s
-            else:
-                estoque.append({"local":dest,"nome":mat_s.strip(),"saldo":qtd_s,"un":"UN","ts":datetime.now().isoformat()})
-            movs.insert(0,{"tipo":"SAIDA","local":f"GALPÃO ➡️ {dest}","mat":mat_s,"qtd":qtd_s,"data":datetime.now().strftime("%d/%m/%Y %H:%M:%S")})
-            save_data(estoque,movs,combos)
-            st.success(f"Transferido GALPÃO ➡️ {dest}")
-            st.rerun()
-
-with tab3:
-    st.subheader("↩️ DEVOLUÇÃO Vice-versa")
-    c1,c2,c3,c4 = st.columns(4)
-    orig = c1.selectbox("Origem", ["SALA ANEXA","OFICINA DE REVESTIMENTO","GALPÃO DE MATERIAIS"], key="d_orig")
-    dest_d = c2.selectbox("Destino", ["GALPÃO DE MATERIAIS","SALA ANEXA","OFICINA DE REVESTIMENTO"], key="d_dest")
-    mat_d = c3.text_input("Material", key="d_mat")
-    qtd_d = c4.number_input("Qtd", min_value=0.0, key="d_qtd")
-    if st.button("DEVOLVER E ATUALIZAR"):
-        if orig==dest_d:
-            st.error("Origem != destino")
-        else:
-            total = sum(e["saldo"] for e in estoque if e["local"]==orig and e["nome"].lower()==mat_d.lower())
-            if total < qtd_d:
-                st.error(f"Só tem {total} em {orig}")
-            else:
-                precisa=qtd_d
-                for e in [x for x in estoque if x["local"]==orig and x["nome"].lower()==mat_d.lower()]:
-                    tirar=min(e["saldo"],precisa)
-                    e["saldo"]-=tirar
-                    precisa-=tirar
-                st.session_state.estoque=[e for e in estoque if e["saldo"]>0]
-                estoque=st.session_state.estoque
-                dd = next((e for e in estoque if e["local"]==dest_d and e["nome"].lower()==mat_d.lower()), None)
-                if dd:
-                    dd["saldo"]+=qtd_d
-                else:
-                    estoque.append({"local":dest_d,"nome":mat_d.strip(),"saldo":qtd_d,"un":"UN","ts":datetime.now().isoformat()})
-                movs.insert(0,{"tipo":"DEVOLUÇÃO","local":f"{orig} ➡️ {dest_d}","mat":mat_d,"qtd":qtd_d,"data":datetime.now().strftime("%d/%m/%Y %H:%M:%S")})
-                save_data(estoque,movs,combos)
-                st.success("Devolvido!")
-                st.rerun()
-
-with tab4:
-    st.subheader("🧩 COMBOS 7 chars - Pode ser AAAAAAA, 1111111 - EDITÁVEL")
+with st.sidebar.form("form_mov", clear_on_submit=False):
+    area = st.selectbox("📍 ÁREA", ["ÁREA 1","ÁREA 2","ÁREA 3"])
+    descricao = st.text_input("📝 DESCRIÇÃO", value=dados_auto.get("DESCRICAO",""))
+    lote = st.text_input("🏷️ LOTE", value=dados_auto.get("LOTE",""))
     c1,c2 = st.columns(2)
-    code = c1.text_input("Código 7 chars *", max_chars=7, key="c_code")
-    nome = c2.text_input("Nome produto *", key="c_nome")
-    cc1,cc2,cc3 = st.columns([2,1,1])
-    mat_c = cc1.text_input("Material", key="c_mat")
-    qtd_c = cc2.number_input("Qtd p/1", min_value=0.0, key="c_qtd_m")
-    if cc3.button(" + Add"):
-        if mat_c and qtd_c>0:
-            st.session_state.combo_temp.append({"mat":mat_c.strip(),"qtd":qtd_c})
-    if st.session_state.combo_temp:
-        st.write(st.session_state.combo_temp)
-    if st.button("💾 SALVAR COMBO 7 CHARS", type="primary"):
-        if len(code)!=7:
-            st.error("Precisa 7 chars!")
-        elif not nome or not st.session_state.combo_temp:
-            st.error("Nome e receita")
-        else:
-            combos = [c for c in combos if c["code"]!=code]
-            combos.append({"code":code,"nome":nome.strip(),"receita":list(st.session_state.combo_temp)})
-            st.session_state.combos=combos
-            st.session_state.combo_temp=[]
-            save_data(estoque,movs,combos)
-            st.success(f"Combo {code} salvo!")
-            st.rerun()
-    for c in combos:
-        col_a,col_b,col_c = st.columns([3,1,1])
-        col_a.write(f"**{c['code']}** - {c['nome']} | {', '.join([f'{r['mat']}({r['qtd']})' for r in c['receita']])}")
-        if col_b.button("EDITAR", key=f"edit_{c['code']}"):
-            st.session_state.combo_temp = list(c["receita"])
-            st.session_state["c_code"] = c["code"]
-            st.session_state["c_nome"] = c["nome"]
-            st.rerun()
-        if col_c.button("APAGAR", key=f"del_{c['code']}"):
-            st.session_state.combos = [x for x in combos if x["code"]!=c["code"]]
-            save_data(estoque,st.session_state.movs,st.session_state.combos)
-            st.rerun()
+    with c1:
+        fab = st.date_input("🏭 FABRICAÇÃO", value=date.today())
+    with c2:
+        val_dias = st.number_input("⏳ VALIDADE DIAS", min_value=1, value=int(dados_auto.get("VALIDADE_DIAS",90)) if dados_auto.get("VALIDADE_DIAS") else 90)
+    tipo_emb = st.selectbox("📦 TIPO EMBALAGEM", ["Saco","Caixa","Fardo","Palete","Rolo","Galão","Balde","Outro"])
+    qtd_por_emb = st.number_input("QTD POR EMBALAGEM", min_value=0.01, value=float(dados_auto.get("QTD_POR_EMBALAGEM",1.0)) if dados_auto.get("QTD_POR_EMBALAGEM") else 1.0)
+    un_med = st.selectbox("📏 UNIDADE (UND,M²,KG...)", ["UND","M²","M³","KG","LITROS","TON","PÇ","M"])
+    qtd_emb = st.number_input("🔢 QTD EMBALAGENS", min_value=1, value=1, step=1)
 
-with tab5:
-    st.subheader("🏭 PRODUZIR - PADRÃO 7 chars OU OUTROS")
-    modo = st.radio("Modo", ["📦 PADRÃO (7 chars)","🔧 OUTROS"], horizontal=True)
-    if "PADRÃO" in modo:
-        code_p = st.text_input("Digite 7 chars", max_chars=7, key="p_code")
-        qtd_p = st.number_input("Qtd produzir", min_value=1.0, value=1.0, key="p_qtd")
-        combo_sel = next((c for c in combos if c["code"]==code_p), None) if len(code_p)==7 else None
-        if len(code_p)==7:
-            if combo_sel:
-                st.success(f"{combo_sel['code']} - {combo_sel['nome']}")
-                for r in combo_sel["receita"]:
-                    total_of = sum(e["saldo"] for e in estoque if e["local"]=="OFICINA DE REVESTIMENTO" and e["nome"].lower()==r["mat"].lower())
-                    st.write(f"• {r['mat']}: precisa {r['qtd']*qtd_p} | tem {total_of} OFICINA")
-                if st.button("⚡ PRODUZIR PADRÃO + MENSAL", type="primary"):
-                    falta=[]
-                    for r in combo_sel["receita"]:
-                        tot = sum(e["saldo"] for e in estoque if e["nome"].lower()==r["mat"].lower())
-                        if tot < r["qtd"]*qtd_p:
-                            falta.append(r["mat"])
-                    if falta:
-                        st.error(f"Falta {','.join(falta)}")
-                    else:
-                        for r in combo_sel["receita"]:
-                            precisa=r["qtd"]*qtd_p
-                            for e in [x for x in estoque if x["nome"].lower()==r["mat"].lower()]:
-                                if precisa<=0: break
-                                tirar=min(e["saldo"],precisa)
-                                e["saldo"]-=tirar
-                                precisa-=tirar
-                        st.session_state.estoque=[e for e in estoque if e["saldo"]>0]
-                        movs.insert(0,{"tipo":"PRODUÇÃO","local":f"OFICINA ➡️ {combo_sel['code']}","mat":combo_sel["nome"],"qtd":qtd_p,"code":combo_sel["code"],"data":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),"mes":mes_atual})
-                        save_data(st.session_state.estoque,movs,combos)
-                        st.success(f"Produzido! Mês {mes_atual}")
-                        st.rerun()
-            else:
-                st.error(f"Código {code_p} não existe. Use OUTROS")
+    total_uni = qtd_por_emb * qtd_emb
+    if mov_tipo == "SAÍDA":
+        total_uni = -total_uni
+        qtd_emb_calc = -qtd_emb
     else:
-        nome_o = st.text_input("Nome OUTROS *", key="o_nome")
-        oc1,oc2,oc3 = st.columns([2,1,1])
-        mat_o = oc1.text_input("Material", key="o_mat")
-        qtd_o = oc2.number_input("Qtd p/1", min_value=0.0, key="o_qtd_o")
-        if oc3.button(" + Add OUTROS"):
-            if mat_o and qtd_o>0:
-                st.session_state.outros_temp.append({"mat":mat_o.strip(),"qtd":qtd_o})
-        if st.session_state.outros_temp:
-            st.write(st.session_state.outros_temp)
-        qtd_prod_o = st.number_input("Qtd OUTROS", min_value=1.0, value=1.0, key="o_qtd_prod")
-        if st.button("⚡ PRODUZIR OUTROS + MENSAL", type="primary"):
-            if not nome_o or not st.session_state.outros_temp:
-                st.error("Nome e receita")
-            else:
-                for r in st.session_state.outros_temp:
-                    precisa=r["qtd"]*qtd_prod_o
-                    for e in [x for x in estoque if x["nome"].lower()==r["mat"].lower()]:
-                        if precisa<=0: break
-                        tirar=min(e["saldo"],precisa)
-                        e["saldo"]-=tirar
-                        precisa-=tirar
-                st.session_state.estoque=[e for e in estoque if e["saldo"]>0]
-                movs.insert(0,{"tipo":"PRODUÇÃO OUTROS","local":"OFICINA OUTROS","mat":nome_o,"qtd":qtd_prod_o,"code":"OUTROS","data":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),"mes":mes_atual})
-                st.session_state.outros_temp=[]
-                save_data(st.session_state.estoque,movs,combos)
-                st.success("Produzido OUTROS!")
-                st.rerun()
+        qtd_emb_calc = qtd_emb
 
-with tab6:
-    st.subheader("📊 Estoque + Mensal")
-    if prod_por_mes:
-        df_mensal = pd.DataFrame([{"Mês":k,"Qtd":v} for k,v in sorted(prod_por_mes.items())])
-        st.bar_chart(df_mensal, x="Mês", y="Qtd")
-        st.dataframe(df_mensal, use_container_width=True)
-    if estoque:
-        df = pd.DataFrame(estoque)
-        st.dataframe(df.groupby(["local","nome"])["saldo"].sum().reset_index(), use_container_width=True)
-        st.bar_chart(df.groupby("local")["saldo"].sum().reset_index(), x="local", y="saldo")
-    if movs:
-        st.dataframe(pd.DataFrame(movs).head(50), use_container_width=True)
+    st.info(f"Total: {total_uni:.2f} {un_med}")
+    btn = st.form_submit_button(f"💾 SALVAR {mov_tipo}", use_container_width=True)
+
+    if btn:
+        if not id_final:
+            st.sidebar.error("Digite o ID!")
+        else:
+            venc = fab + timedelta(days=int(val_dias))
+            dias_rest = (venc - date.today()).days
+            status = "✅ OK" if dias_rest > 30 else "⚠️ BREVE" if dias_rest > 0 else "❌ VENCIDO"
+            nova = {
+                "ID_RASTREADOR": id_final, "AREA": area, "DESCRICAO": descricao, "LOTE": lote,
+                "FABRICACAO": fab, "VALIDADE_DIAS": val_dias, "VENCIMENTO": venc,
+                "TIPO_EMBALAGEM": tipo_emb, "QTD_POR_EMBALAGEM": qtd_por_emb, "UN_MEDIDA": un_med,
+                "QTD_EMBALAGENS": qtd_emb_calc, "TOTAL_UNIDADES": total_uni,
+                "MOV_TIPO": mov_tipo, "DATA_MOV": date.today(), "STATUS": status
+            }
+            st.session_state.estoque = pd.concat([df, pd.DataFrame([nova])], ignore_index=True)
+            st.sidebar.success(f"{mov_tipo} salva no {id_final}!")
+            st.rerun()
+
+if df.empty:
+    st.info("👈 Cadastre o primeiro material na lateral")
+else:
+    saldo = df.groupby("ID_RASTREADOR").agg(
+        SALDO_EMB=("QTD_EMBALAGENS","sum"), SALDO_UNI=("TOTAL_UNIDADES","sum"),
+        DESCRICAO=("DESCRICAO","last"), AREA=("AREA","last")
+    ).reset_index()
+
+    c1,c2,c3,c4 = st.columns(4)
+    c1.metric("IDs Ativos", len(saldo[saldo["SALDO_EMB"]>0]))
+    c2.metric("Total Embalagens", f"{saldo[saldo['SALDO_EMB']>0]['SALDO_EMB'].sum():.0f}")
+    c3.metric("Total Unidades", f"{saldo[saldo['SALDO_UNI']>0]['SALDO_UNI'].sum():.2f}")
+    c4.metric("Mov Hoje", len(df[df["DATA_MOV"]==date.today()]))
+
+    tab_graf, tab_tabela, tab_edit = st.tabs(["📊 GRÁFICOS", "📋 ESTOQUE", "✏️ EDITAR / EXCLUIR"])
+
+    with tab_graf:
+        cg1,cg2 = st.columns(2)
+        with cg1:
+            fig_area = px.bar(df.groupby("AREA")["TOTAL_UNIDADES"].sum().reset_index(), x="AREA", y="TOTAL_UNIDADES", color="AREA", title="Movimentação por Área", text_auto=True)
+            st.plotly_chart(fig_area, use_container_width=True)
+            fig_mov = px.pie(df, names="MOV_TIPO", values="QTD_EMBALAGENS", title="Entrada x Saída x Devolução", hole=0.4)
+            st.plotly_chart(fig_mov, use_container_width=True)
+        with cg2:
+            fig_id = px.bar(saldo.sort_values("SALDO_UNI", ascending=False).head(10), x="ID_RASTREADOR", y="SALDO_UNI", title="Top 10 IDs - Saldo Unidades", text_auto=True, color="SALDO_UNI")
+            st.plotly_chart(fig_id, use_container_width=True)
+            fig_val = px.histogram(df, x="VENCIMENTO", color="STATUS", title="Vencimentos por Data")
+            st.plotly_chart(fig_val, use_container_width=True)
+
+    with tab_tabela:
+        st.subheader("Saldo Atual por ID Rastreador")
+        st.dataframe(saldo[saldo["SALDO_EMB"]>0], use_container_width=True)
+        st.subheader("Histórico Completo")
+        filtro_id2 = st.selectbox("Filtrar ID", ["TODOS"] + sorted(df["ID_RASTREADOR"].unique().tolist()), key="filtro2")
+        df_show = df if filtro_id2=="TODOS" else df[df["ID_RASTREADOR"]==filtro_id2]
+        st.dataframe(df_show.sort_values("DATA_MOV", ascending=False), use_container_width=True, height=400)
+        c_s1,c_s2 = st.columns(2)
+        c_s1.success(f"SOMA TOTAL EMBALAGENS: {df_show['QTD_EMBALAGENS'].sum():.0f}")
+        c_s2.success(f"SOMA TOTAL UNIDADES: {df_show['TOTAL_UNIDADES'].sum():.2f}")
+
+    with tab_edit:
+        st.subheader("✏️ Editar e Excluir Registros")
+        df_edit = st.data_editor(df, num_rows="dynamic", use_container_width=True, key="editor")
+        col_e1, col_e2, col_e3 = st.columns(3)
+        with col_e1:
+            if st.button("💾 SALVAR EDIÇÕES", use_container_width=True):
+                st.session_state.estoque = df_edit
+                st.success("Alterações salvas!")
+                st.rerun()
+        with col_e2:
+            id_del = st.selectbox("ID para excluir", [""] + sorted(df["ID_RASTREADOR"].unique().tolist()))
+            if st.button("🗑️ EXCLUIR ID INTEIRO", use_container_width=True):
+                if id_del:
+                    st.session_state.estoque = df[df["ID_RASTREADOR"]!= id_del]
+                    st.success(f"ID {id_del} excluído!")
+                    st.rerun()
+        with col_e3:
+            if st.button("🔥 LIMPAR TUDO", use_container_width=True):
+                st.session_state.estoque = pd.DataFrame(columns=df.columns)
+                st.rerun()
