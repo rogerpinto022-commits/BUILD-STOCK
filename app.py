@@ -20,10 +20,17 @@ def get_now_br():
 
 
 # Arquivos de Persistência Local (CSV)
-ESTOQUE_FILE = "build_stock_estoque.csv"
-MOV_FILE = "build_stock_movimentacoes.csv"
+ESTOQUE_FILE = "build_stock_estoque_v2.csv"
+MOV_FILE = "build_stock_movimentacoes_v2.csv"
+PERMISSOES_FILE = "build_stock_permissoes.csv"
 
-# Carregamento com Persistência
+areas_reais = [
+    "🏭 Galpão de Materiais Refratários",
+    "🧱 Oficina de Revestimento",
+    "🚪 Sala Anexa",
+]
+
+# 1. CARREGAMENTO COM PERSISTÊNCIA REAL
 if "estoque_df" not in st.session_state:
   if os.path.exists(ESTOQUE_FILE):
     st.session_state.estoque_df = pd.read_csv(ESTOQUE_FILE)
@@ -36,10 +43,10 @@ if "estoque_df" not in st.session_state:
         "Fabricação",
         "Validade",
         "Área",
-        "Emb Externa Tipo",
         "Qtd Externa",
-        "Emb Interna Tipo",
+        "Emb Externa",
         "Qtd Interna por Externa",
+        "Emb Interna",
         "Medida por Interna",
         "Unidade Final",
         "Total Geral",
@@ -61,84 +68,145 @@ if "mov_df" not in st.session_state:
         "Responsável",
     ])
 
+# Matriz de Habilitação por Área (True = Habilitado por padrão para novos IDs)
+if "permissoes_df" not in st.session_state:
+  if os.path.exists(PERMISSOES_FILE):
+    st.session_state.permissoes_df = pd.read_csv(PERMISSOES_FILE)
+  else:
+    st.session_state.permissoes_df = pd.DataFrame(
+        columns=["ID", "Área", "Ativo"]
+    )
+
 
 def salvar_dados():
   st.session_state.estoque_df.to_csv(ESTOQUE_FILE, index=False)
   st.session_state.mov_df.to_csv(MOV_FILE, index=False)
+  st.session_state.permissoes_df.to_csv(PERMISSOES_FILE, index=False)
+
+
+def garantir_permissao(id_prod, area):
+  df_p = st.session_state.permissoes_df
+  if (
+      df_p.empty
+      or not ((df_p["ID"] == id_prod) & (df_p["Área"] == area)).any()
+  ):
+    nova_perm = pd.DataFrame([{"ID": id_prod, "Área": area, "Ativo": True}])
+    st.session_state.permissoes_df = pd.concat(
+        [df_p, nova_perm], ignore_index=True
+    )
+    salvar_dados()
 
 
 # Título Principal
-st.title("📦 BUILD STOCK BR — Sistema Inteligente de Almoxarifado")
+st.title("📦 BUILD STOCK BR — Gestão Inteligente de Almoxarifado Industrial")
 st.markdown("---")
 
-# Menu Lateral com as 3 Áreas Reais
+# Menu Lateral Profissional
 menu = [
-    "📋 Painel & Estoque por ID",
-    "🆕 Cadastro Mestre",
-    "🔄 Transferência & Movimentação",
+    "📋 Painel & Soma Geral",
+    "⚙️ Habilitar / Desabilitar IDs por Área",
+    "🆕 Cadastro Mestre (Galpão)",
+    "🔄 Movimentações & Transferências",
     "📊 Gráficos & Linha do Tempo",
 ]
 escolha = st.sidebar.selectbox("🧭 Navegação", menu)
 
 df = st.session_state.estoque_df
 mov_df = st.session_state.mov_df
-areas_reais = [
-    "🏭 Galpão de Materiais Refratários",
-    "🚪 Sala Anexa",
-    "🧱 Oficina de Revestimento",
-]
+perm_df = st.session_state.permissoes_df
 
-if escolha == "📋 Painel & Estoque por ID":
-  st.subheader("📊 Painel de Controle e Rastreabilidade por ID")
-
-  # Métricas Principais
-  c1, c2, c3, c4 = st.columns(4)
-  with c1:
-    st.metric("Total de Lotes Ativos", len(df))
-  with c2:
-    vol_geral = f"{df['Total Geral'].sum():,.2f}" if not df.empty else "0.00"
-    st.metric("Volume Global em Estoque", vol_geral)
-  with c3:
-    st.metric("Áreas Monitoradas", len(areas_reais))
-  with c4:
-    st.metric("Persistência CSV", "Ativo 🟢")
-
-  st.markdown("---")
+if escolha == "📋 Painel & Soma Geral":
+  st.subheader("📊 Painel de Controle e Soma Geral Consolidada")
 
   if df.empty:
-    st.info("Nenhum item cadastrado no sistema.")
+    st.info("Nenhum material cadastrado no sistema.")
   else:
-    # FILTRO RÁPIDO DE RASTREIO POR ID
-    st.markdown("### 🔍 Rastreamento Direto por ID / Código")
+    # Métricas Principais
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+      st.metric("Total de Registros", len(df))
+    with c2:
+      vol_total_geral = df["Total Geral"].sum()
+      st.metric("Soma Geral das 3 Áreas", f"{vol_total_geral:,.2f}")
+    with c3:
+      st.metric("Áreas Ativas", len(areas_reais))
+    with c4:
+      st.metric("Persistência CSV", "Ativo 🟢")
+
+    st.markdown("---")
+
+    # Soma por Área
+    st.markdown("### 📈 Consolidado de Volume por Área")
+    soma_por_area = df.groupby("Área")["Total Geral"].sum().reset_index()
+    st.dataframe(soma_por_area, use_container_width=True)
+
+    st.markdown("---")
+    st.markdown("### 🔍 Rastreio e Estoque Detalhado por ID")
+
+    # Filtro por ID
     ids_unicos = ["TODOS OS IDS"] + list(df["ID"].unique())
-    filtro_id_escolhido = st.selectbox(
-        "Selecione ou digite para rastrear o ID específico", ids_unicos
+    filtro_id = st.selectbox("Selecione o ID Rastreador", ids_unicos)
+
+    area_filtro = st.selectbox(
+        "Filtrar por Área", ["TODAS AS ÁREAS"] + areas_reais
     )
 
-    if filtro_id_escolhido != "TODOS OS IDS":
-      df_exibir = df[df["ID"] == filtro_id_escolhido]
-    else:
-      df_exibir = df
-
-    # Filtro por Área
-    area_filtro = st.selectbox("Filtrar por Área Específica", ["TODAS AS ÁREAS"] + areas_reais)
+    df_exibir = df.copy()
+    if filtro_id != "TODOS OS IDS":
+      df_exibir = df_exibir[df_exibir["ID"] == filtro_id]
     if area_filtro != "TODAS AS ÁREAS":
       df_exibir = df_exibir[df_exibir["Área"] == area_filtro]
 
-    st.markdown("### 📦 Estoque Atual Detalhado")
     st.dataframe(df_exibir, use_container_width=True)
 
-    # Botão para Baixar CSV Filtrado
-    csv_filtrado = df_exibir.to_csv(index=False).encode("utf-8")
+    # Botão de Download
+    csv_data = df_exibir.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label="📥 Baixar Relatório Filtrado (CSV)",
-        data=csv_filtrado,
-        file_name="build_stock_estoque_filtrado.csv",
+        label="📥 Baixar Relatório Atual (CSV)",
+        data=csv_data,
+        file_name="build_stock_relatorio.csv",
         mime="text/csv",
     )
 
-elif escolha == "🆕 Cadastro Mestre":
-  st.subheader("➕ Cadastro Mestre com Auto Preenchimento e Conversão Flexível")
+elif escolha == "⚙️ Habilitar / Desabilitar IDs por Área":
+  st.subheader("⚙️ Controle de Visibilidade de IDs por Área")
+  st.markdown(
+      "Ative ou desative quais IDs aparecem ou podem ser movimentados em cada"
+      " área (ex: Sala Anexa com apenas 2 itens habilitados)."
+  )
+
+  if df.empty:
+    st.warning("Cadastre itens no Cadastro Mestre primeiro.")
+  else:
+    ids_cadastrados = df["ID"].unique()
+
+    area_config = st.selectbox("Selecione a Área para Configurar", areas_reais)
+
+    st.markdown(f"### Matriz de Ativação para: **{area_config}**")
+
+    for id_p in ids_cadastrados:
+      garantir_permissao(id_p, area_config)
+      idx_p = perm_df[
+          (perm_df["ID"] == id_p) & (perm_df["Área"] == area_config)
+      ].index
+
+      if not idx_p.empty:
+        status_atual = bool(perm_df.loc[idx_p[0], "Ativo"])
+        novo_status = st.checkbox(
+            f"ID: {id_p} (Habilitado nesta área)",
+            value=status_atual,
+            key=f"chk_{area_config}_{id_p}",
+        )
+        if novo_status != status_atual:
+          perm_df.loc[idx_p[0], "Ativo"] = novo_status
+          salvar_dados()
+          st.rerun()
+
+elif escolha == "🆕 Cadastro Mestre (Galpão)":
+  st.subheader(
+      "➕ Cadastro Mestre de Novo Material (Entrada Inicial no Galpão de"
+      " Materiais Refratários)"
+  )
 
   with st.form("form_mestre", clear_on_submit=True):
     c1, c2, c3 = st.columns(3)
@@ -155,55 +223,43 @@ elif escolha == "🆕 Cadastro Mestre":
       )
 
     st.markdown("---")
-    c4, c5 = st.columns(2)
+    c4, c5, c6, c7 = st.columns(4)
     with c4:
-      area_inicial = st.selectbox("📍 Área de Destino Inicial", areas_reais)
+      qtd_ext = st.number_input("Qtd Externa", min_value=0.1, value=1.0)
     with c5:
-      un_final = st.selectbox(
-          "📏 Unidade de Medida Final",
-          ["KG", "UN", "L", "M", "M²", "PÇ", "Saco", "Rolo", "Galão"],
+      emb_ext = st.selectbox(
+          "Tipo Emb Externa", ["Palete", "Caixa", "Fardo", "Tambor"]
       )
-
-    st.markdown("### 🔄 Configuração de Embalagens e Fatores de Conversão")
-    c6, c7, c8, c9 = st.columns(4)
     with c6:
-      emb_ext_tipo = st.selectbox(
-          "Embalagem Externa", ["Palete", "Caixa", "Fardo"]
-      )
-    with c7:
-      qtd_externa = st.number_input(
-          "Qtd Externa", min_value=0.1, value=1.0
-      )
-    with c8:
-      emb_int_tipo = st.selectbox(
-          "Embalagem Interna",
-          ["Saco", "Rolo", "M²", "M", "UND", "PÇ", "Galão"],
-      )
-    with c9:
-      qtd_int_por_ext = st.number_input(
+      qtd_int_ext = st.number_input(
           "Qtd Interna por Externa", min_value=0.1, value=40.0
       )
+    with c7:
+      emb_int = st.selectbox(
+          "Tipo Emb Interna", ["Saco", "Rolo", "M²", "M", "PÇ", "Galão", "UN"]
+      )
 
-    medida_por_int = st.number_input(
-        "⚖️ Medida por Unidade Interna",
-        min_value=0.01,
-        value=25.0,
+    medida_int = st.number_input(
+        "⚖️ Medida por Unidade Interna (KG/M/L)", min_value=0.01, value=25.0
     )
+    un_final = st.selectbox("📏 Unidade Final", ["KG", "UN", "L", "M", "M²"])
 
-    total_calculado = qtd_externa * qtd_int_por_ext * medida_por_int
+    total_calculado = qtd_ext * qtd_int_ext * medida_int
     st.info(
-        f"💡 **Cálculo Automático de Volume:** {qtd_externa} {emb_ext_tipo}(s)"
-        f" × {qtd_int_por_ext} {emb_int_tipo}(s) × {medida_por_int} ="
-        f" **{total_calculado:,.2f} {un_final}**"
+        f"💡 **Volume Calculado Inicial no Galpão:** {total_calculado:,.2f}"
+        f" {un_final}"
     )
 
-    salvar_btn = st.form_submit_button("💾 Salvar Cadastro Mestre")
+    salvar_btn = st.form_submit_button("💾 Salvar Cadastro no Galpão")
 
     if salvar_btn:
       if not id_prod or not descricao or not marca or not lote:
-        st.error("❌ Preencha todos os campos obrigatórios marcados com *!")
+        st.error("❌ Preencha todos os campos obrigatórios com *!")
       else:
-        novo_registro = pd.DataFrame([{
+        galpao_nome = areas_reais[0]  # Galpão de Materiais Refratários
+
+        # Verifica se já existe o registro exato no galpão
+        novo_reg = pd.DataFrame([{
             "ID": id_prod.upper(),
             "Descrição": descricao.upper(),
             "Marca": marca.upper(),
@@ -213,29 +269,34 @@ elif escolha == "🆕 Cadastro Mestre":
                 pd.to_datetime(fab_data)
                 + pd.Timedelta(days=int(validade_dias))
             ).split()[0],
-            "Área": area_inicial,
-            "Emb Externa Tipo": emb_ext_tipo,
-            "Qtd Externa": qtd_externa,
-            "Emb Interna Tipo": emb_int_tipo,
-            "Qtd Interna por Externa": qtd_int_por_ext,
-            "Medida por Interna": medida_por_int,
+            "Área": galpao_nome,
+            "Qtd Externa": qtd_ext,
+            "Emb Externa": emb_ext,
+            "Qtd Interna por Externa": qtd_int_ext,
+            "Emb Interna": emb_int,
+            "Medida por Interna": medida_int,
             "Unidade Final": un_final,
             "Total Geral": total_calculado,
         }])
 
         st.session_state.estoque_df = pd.concat(
-            [df, novo_registro], ignore_index=True
+            [df, novo_reg], ignore_index=True
         )
 
+        # Habilita automaticamente para todas as áreas inicialmente
+        for ar in areas_reais:
+          garantir_permissao(id_prod.upper(), ar)
+
+        # Registra no histórico de movimentações
         nova_mov = pd.DataFrame([{
             "Data/Hora": get_now_br(),
             "ID": id_prod.upper(),
             "Descrição": descricao.upper(),
             "Lote": lote.upper(),
-            "Tipo": "📥 Entrada Inicial",
+            "Tipo": "📥 Entrada Inicial (Cadastro)",
             "Quantidade": total_calculado,
-            "Origem": "Fornecedor",
-            "Destino": area_inicial,
+            "Origem": "Fornecedor Externo",
+            "Destino": galpao_nome,
             "Responsável": "Almoxarife",
         }])
         st.session_state.mov_df = pd.concat(
@@ -243,113 +304,162 @@ elif escolha == "🆕 Cadastro Mestre":
         )
 
         salvar_dados()
-        st.success(f"✅ ID **{id_prod.upper()}** cadastrado com sucesso!")
+        st.success(
+            f"✅ ID **{id_prod.upper()}** cadastrado com sucesso no **{galpao_nome}**"
+            " e disponível para as demais áreas!"
+        )
 
-elif escolha == "🔄 Transferência & Movimentação":
-  st.subheader("🔄 Transferência Automática Inteligente")
+elif escolha == "🔄 Movimentações & Transferências":
+  st.subheader(
+      "🔄 Movimentações por Área (Entrada, Saída, Devolução e Transferência"
+      " Automática)"
+  )
 
   if df.empty:
-    st.warning("⚠️ Não há lotes cadastrados para movimentar.")
+    st.warning("Não há materiais cadastrados.")
   else:
-    item_op = st.selectbox(
-        "Selecione o Insumo",
-        df["ID"] + " - " + df["Descrição"] + " (Lote: " + df["Lote"] + " | Área: " + df["Área"] + ")",
-    )
-    id_escolhido = item_op.split(" - ")[0]
-    lote_escolhido = item_op.split("Lote: ")[1].split(" | ")[0]
-    area_origem_item = item_op.split("Área: ")[1].split(")")[0]
+    area_operacao = st.selectbox("Selecione a Área da Operação", areas_reais)
 
-    lotes_disponiveis = df[
-        (df["ID"] == id_escolhido) & (df["Lote"] == lote_escolhido) & (df["Área"] == area_origem_item)
+    # Filtra IDs habilitados para esta área
+    ids_habilitados = perm_df[
+        (perm_df["Área"] == area_operacao) & (perm_df["Ativo"] == True)
+    ]["ID"].unique()
+
+    df_area_permitida = df[
+        (df["Área"] == area_operacao) & (df["ID"].isin(ids_habilitados))
     ]
 
-    if not lotes_disponiveis.empty:
-      item_atual = lotes_disponiveis.iloc[0]
-      max_qtd = item_atual["Total Geral"]
-      unidade_item = item_atual["Unidade Final"]
+    # Se a área for a Oficina e o item não existir fisicamente lá ainda mas estiver habilitado no catálogo global, permite puxar do galpão
+    df_disponivel_mov = df[df["ID"].isin(ids_habilitados)]
 
-      st.info(
-          f"📍 **Origem:** {area_origem_item} | 📦 **Estoque Disponível no ID:** {max_qtd:,.2f} {unidade_item}"
+    if df_disponivel_mov.empty:
+      st.warning(
+          f"Nenhum ID habilitado ou com estoque disponível para a área"
+          f" **{area_operacao}**. Verifique a aba de Habilitação de IDs."
+      )
+    else:
+      item_op = st.selectbox(
+          "Selecione o Material / Lote",
+          df_disponivel_mov["ID"]
+          + " - "
+          + df_disponivel_mov["Descrição"]
+          + " (Lote: "
+          + df_disponivel_mov["Lote"]
+          + " | Área Atual: "
+          + df_disponivel_mov["Área"]
+          + ")",
       )
 
-      c_m1, c_m2, c_m3 = st.columns(3)
+      id_sel = item_op.split(" - ")[0]
+      lote_sel = item_op.split("Lote: ")[1].split(" | ")[0]
+      area_atual_item = item_op.split("Área Atual: ")[1].split(")")[0]
+
+      reg_item = df[
+          (df["ID"] == id_sel)
+          & (df["Lote"] == lote_sel)
+          & (df["Área"] == area_atual_item)
+      ].iloc[0]
+      max_qtd = reg_item["Total Geral"]
+      unidade = reg_item["Unidade Final"]
+
+      st.info(
+          f"📍 **Localização Atual:** {area_atual_item} | 📦 **Saldo no Lote:**"
+          f" {max_qtd:,.2f} {unidade}"
+      )
+
+      c_m1, c_m2 = st.columns(2)
       with c_m1:
-        tipo_mov = st.selectbox(
-            "Tipo de Operação",
+        tipo_op = st.selectbox(
+            "Tipo de Movimentação",
             [
-                "🚀 Transferência Automática",
-                "📤 Baixa/Saída Direta",
-                "📥 Entrada Direta",
+                "📤 Saída (Com Transferência Automática entre Áreas)",
+                "📥 Entrada Direta na Área",
+                "↩️ Devolução para a Área",
             ],
         )
       with c_m2:
         qtd_mov = st.number_input(
-            f"Quantidade ({unidade_item})",
-            min_value=0.01,
-            max_value=float(max_qtd) if "Transferência" in tipo_mov or "Baixa" in tipo_mov else 1000000.0,
-            value=min(1.0, float(max_qtd)),
+            f"Quantidade ({unidade})", min_value=0.01, value=1.0
         )
-      with c_m3:
-        destinos_possiveis = [a for a in areas_reais if a != area_origem_item]
-        destino_alvo = st.selectbox(
-            "Destino Efetivo",
+
+      destino_transf = None
+      if "Saída" in tipo_op:
+        destinos_possiveis = [a for a in areas_reais if a != area_atual_item]
+        destino_transf = st.selectbox(
+            "Destino Automático da Saída",
             destinos_possiveis if destinos_possiveis else areas_reais,
         )
 
-      resp = st.text_input("👤 Responsável", value="Almoxarife")
+      responsavel = st.text_input("👤 Responsável pela Operação", value="Almoxarife")
 
-      if st.button("⚡ Executar Movimentação"):
-        idx_alvo = df[
-            (df["ID"] == id_escolhido) & (df["Lote"] == lote_escolhido) & (df["Área"] == area_origem_item)
+      if st.button("⚡ Executar Operação"):
+        idx_origem = df[
+            (df["ID"] == id_sel)
+            & (df["Lote"] == lote_sel)
+            & (df["Área"] == area_atual_item)
         ].index[0]
 
-        if "Transferência" in tipo_mov:
-          df.loc[idx_alvo, "Total Geral"] -= qtd_mov
+        if "Saída" in tipo_op:
+          if qtd_mov > max_qtd:
+            st.error("❌ Erro: Quantidade solicitada excede o saldo atual!")
+            st.stop()
 
-          ja_existe_no_destino = df[
-              (df["ID"] == id_escolhido)
-              & (df["Lote"] == lote_escolhido)
-              & (df["Área"] == destino_alvo)
+          # Subtrai da origem
+          df.loc[idx_origem, "Total Geral"] -= qtd_mov
+
+          # Adiciona/Atualiza automaticamente no destino
+          ja_existe_dest = df[
+              (df["ID"] == id_sel)
+              & (df["Lote"] == lote_sel)
+              & (df["Área"] == destino_transf)
           ]
-
-          if not ja_existe_no_destino.empty:
-            idx_dest = ja_existe_no_destino.index[0]
-            df.loc[idx_dest, "Total Geral"] += qtd_mov
+          if not ja_existe_dest.empty:
+            idx_d = ja_existe_dest.index[0]
+            df.loc[idx_d, "Total Geral"] += qtd_mov
           else:
-            nova_linha_dest = df.loc[idx_alvo].copy()
-            nova_linha_dest["Área"] = destino_alvo
-            nova_linha_dest["Total Geral"] = qtd_mov
-            df = pd.concat([df, pd.DataFrame([nova_linha_dest])], ignore_index=True)
+            nova_linha_d = reg_item.copy()
+            nova_linha_d["Área"] = destino_transf
+            nova_linha_d["Total Geral"] = qtd_mov
+            df = pd.concat([df, pd.DataFrame([nova_linha_d])], ignore_index=True)
 
-          reg_tipo = "🔄 Transferência Automática"
+          tipo_hist = "🚀 Saída com Transferência Automática"
+          destino_reg = destino_transf
 
-        elif "Baixa" in tipo_mov:
-          df.loc[idx_alvo, "Total Geral"] -= qtd_mov
-          reg_tipo = "📤 Baixa/Saída"
-          destino_alvo = "Consumo Externo"
+        elif "Entrada" in tipo_op:
+          df.loc[idx_origem, "Total Geral"] += qtd_mov
+          tipo_hist = "📥 Entrada Direta"
+          destino_reg = area_atual_item
+          area_atual_item = "Fornecedor / Externo"
 
-        else:
-          df.loc[idx_alvo, "Total Geral"] += qtd_mov
-          reg_tipo = "📥 Entrada Direta"
-          area_origem_item = "Fornecedor"
+        else:  # Devolução
+          df.loc[idx_origem, "Total Geral"] += qtd_mov
+          tipo_hist = "↩️ Devolução"
+          destino_reg = area_atual_item
+          area_atual_item = "Setor Consumidor / Obra"
 
         st.session_state.estoque_df = df
 
+        # Registra auditoria
         nova_mov = pd.DataFrame([{
             "Data/Hora": get_now_br(),
-            "ID": id_escolhido,
-            "Descrição": item_atual["Descrição"],
-            "Lote": lote_escolhido,
-            "Tipo": reg_tipo,
+            "ID": id_sel,
+            "Descrição": reg_item["Descrição"],
+            "Lote": lote_sel,
+            "Tipo": tipo_hist,
             "Quantidade": qtd_mov,
-            "Origem": area_origem_item,
-            "Destino": destino_alvo,
-            "Responsável": resp,
+            "Origem": area_atual_item,
+            "Destino": destino_reg,
+            "Responsável": responsavel,
         }])
-        st.session_state.mov_df = pd.concat([mov_df, nova_mov], ignore_index=True)
+        st.session_state.mov_df = pd.concat(
+            [mov_df, nova_mov], ignore_index=True
+        )
 
         salvar_dados()
-        st.success(f"✅ Operação de **{reg_tipo}** realizada com sucesso!")
+        st.success(
+            f"✅ Operação **{tipo_hist}** realizada com sucesso! Saldo"
+            " atualizado."
+        )
         st.rerun()
 
   st.markdown("---")
@@ -360,44 +470,29 @@ elif escolha == "🔄 Transferência & Movimentação":
     st.dataframe(mov_df, use_container_width=True)
 
 elif escolha == "📊 Gráficos & Linha do Tempo":
-  st.subheader("📊 Gráficos Analíticos e FIFO por Fabricação")
+  st.subheader("📊 Gráficos Analíticos e Linha do Tempo por ID")
 
   if df.empty:
     st.info("Cadastre dados para visualizar os relatórios.")
   else:
-    st.markdown("### ⏳ Alerta FIFO: Lotes Mais Antigos Primeiro")
-    df_fifo = df.sort_values(by="Fabricação", ascending=True)
-    st.dataframe(
-        df_fifo[[
-            "ID",
-            "Descrição",
-            "Lote",
-            "Fabricação",
-            "Validade",
-            "Área",
-            "Total Geral",
-            "Unidade Final",
-        ]],
-        use_container_width=True,
-    )
-
-    st.markdown("---")
     c_g1, c_g2 = st.columns(2)
     with c_g1:
-      st.markdown("#### 📊 Volume Total por ID")
+      st.markdown("#### 📊 Volume Total por ID (Soma Geral)")
       df_chart = df.groupby("ID")["Total Geral"].sum().reset_index()
       st.bar_chart(df_chart, x="ID", y="Total Geral")
 
     with c_g2:
-      st.markdown("#### 🏢 Estoque por Área")
+      st.markdown("#### 🏢 Soma de Estoque por Área")
       df_area_chart = df.groupby("Área")["Total Geral"].sum().reset_index()
       st.bar_chart(df_area_chart, x="Área", y="Total Geral")
 
     st.markdown("---")
-    st.markdown("### 🕒 Linha do Tempo por ID")
+    st.markdown("### 🕒 Linha do Tempo de Movimentações por ID")
     if not mov_df.empty:
-      id_linha_tempo = st.selectbox("Filtrar Linha do Tempo por ID", mov_df["ID"].unique())
-      df_timeline = mov_df[mov_df["ID"] == id_linha_tempo]
-      st.dataframe(df_timeline, use_container_width=True)
+      id_timeline = st.selectbox(
+          "Selecione o ID para auditoria cronológica", mov_df["ID"].unique()
+      )
+      df_tl = mov_df[mov_df["ID"] == id_timeline]
+      st.dataframe(df_tl, use_container_width=True)
     else:
       st.info("Sem movimentações para gerar linha do tempo.")
