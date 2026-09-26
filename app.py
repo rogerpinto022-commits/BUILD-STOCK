@@ -1,194 +1,162 @@
 import streamlit as st
 import pandas as pd
-import datetime
-import pytz
+import plotly.express as px
+import plotly.graph_objects as go
 from supabase import create_client
+from datetime import date, timedelta, datetime
+import os
+from dotenv import load_dotenv
 
-# CONFIG SUPABASE
-SUPABASE_URL = st.secrets.get("SUPABASE_URL", "SUA_URL_AQUI")
-SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "SUA_KEY_AQUI")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-BR_TZ = pytz.timezone('America/Sao_Paulo')
-def now_brt(): return datetime.datetime.now(BR_TZ)
-def fmt_brt(dt):
-    if not dt: return "-"
-    return pd.to_datetime(dt).tz_convert(BR_TZ).strftime("%d/%m/%Y %H:%M:%S BRT") if hasattr(dt,'tzinfo') else str(dt)
+st.set_page_config(page_title="BUILDSTOCK", layout="wide", page_icon="🧱")
 
-def validar_par(s):
-    return len(s)==4 and s.isdigit() and all(c in '02468' for c in s)
+# Se não tem Supabase, roda com dados mock
+MOCK_MODE = not SUPABASE_URL or "xxx" in SUPABASE_URL
+if not MOCK_MODE:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# LOGIN ALMIR
-if 'logado' not in st.session_state: st.session_state.logado=False
-if not st.session_state.logado:
-    st.title("🔐 ALMIR - ACESSO 4 PARES - BRT")
-    st.text_input("NOME", value="ALMIR", disabled=True)
-    senha = st.text_input("SENHA 4 PARES (0,2,4,6,8)", type="password", max_chars=4)
-    if st.button("ENTRAR"):
-        if validar_par(senha):
-            st.session_state.logado=True
-            supabase.table("historico_uso").insert({
-                "usuario":"ALMIR","acao":"LOGIN","detalhe":f"Login ALMIR BRT {now_brt()}",
-                "data": now_brt().isoformat()
-            }).execute()
-            st.rerun()
-        else:
-            st.error("Senha inválida. Use 4 pares. Ex: 2468")
-    st.stop()
+# CSS LUDICO
+st.markdown("""
+<style>
+.big-number {font-size:56px; font-weight:900; text-align:center; color:#1E40AF;}
+.card {border-radius:20px; padding:18px; background:white; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid #E5E7EB}
+.badge-verde {background:#DCFCE7; color:#166534; padding:4px 12px; border-radius:99px; font-weight:bold; font-size:12px}
+.badge-amarelo {background:#FEF9C3; color:#854D0E; padding:4px 12px; border-radius:99px; font-weight:bold; font-size:12px}
+.badge-vermelho {background:#FEE2E2; color:#991B1B; padding:4px 12px; border-radius:99px; font-weight:bold; font-size:12px}
+</style>
+""", unsafe_allow_html=True)
 
-menu = st.sidebar.radio("MENU", ["ESTOQUE GERAL","GALPÃO","SALA ANEXA","OFICINA DE REVESTIMENTO DE CUBAS","GRÁFICOS POR ID","HISTÓRICO"])
+st.title("🧱 BUILDSTOCK")
+st.caption("Soma tudo. Constrói tudo. | ESTOQUE GERAL = LOCAL 1 (MATRIZ FIXA) + LOCAL 2 + LOCAL 3")
 
-def get_bases():
-    res = supabase.table("produtos_base").select("*").execute()
-    return res.data
+# SIDEBAR - MODO AUTOMATICO / MANUAL
+st.sidebar.image("https://i.imgur.com/ placeholder", width=100)
+st.sidebar.header("⚙️ Modo Operação")
+modo_entrada = st.sidebar.radio("ENTRADA", ["AUTOMATICO", "MANUAL"], horizontal=True, key="m_ent")
+modo_saida = st.sidebar.radio("SAÍDA", ["AUTOMATICO", "MANUAL"], horizontal=True, key="m_sai")
+st.sidebar.caption("AUTOMATICO = computa no Local onde você está | MANUAL = pergunta de qual local computar")
 
-def movimentar(tipo, local_origem, id_prod, qtd_pal, marca, lote, dest_local=None, tipo_dest="Geral"):
-    bases = {b['id']:b for b in get_bases()}
-    base = bases.get(id_prod)
-    if not base:
-        st.error("ID não cadastrado"); return
+locais_mock = [{"id":"1","codigo":"LOCAL 1","nome":"MATRIZ - Galpão","fixo":True},{"id":"2","codigo":"LOCAL 2","nome":"Filial 1"},{"id":"3","codigo":"LOCAL 3","nome":"Filial 2"}]
+materiais_mock = [{"id":"1","nome":"Cimento CP-II","ativo":True},{"id":"2","nome":"Tijolo Baiano","ativo":True},{"id":"3","nome":"Areia Fina","ativo":True},{"id":"4","nome":"Brita 1","ativo":False}]
+gavetas_mock = [
+    {"id":"g1","codigo":"ID-01","nome":"Gaveta A","cor":"#1E40AF","local1":95,"local2":45,"local3":35,"ultima_qtd":12,"lote":"LT-2025-882","validade":date.today()+timedelta(days=12)},
+    {"id":"g2","codigo":"ID-02","nome":"Gaveta B","cor":"#10B981","local1":60,"local2":80,"local3":20,"ultima_qtd":8,"lote":"LT-2025-910","validade":date.today()+timedelta(days=95)},
+    {"id":"g3","codigo":"ID-03","nome":"Gaveta C","cor":"#F59E0B","local1":30,"local2":30,"local3":60,"ultima_qtd":15,"lote":"LT-2025-901","validade":date.today()+timedelta(days=5)},
+    {"id":"g4","codigo":"ID-04","nome":"Gaveta D","cor":"#EF4444","local1":120,"local2":10,"local3":10,"ultima_qtd":20,"lote":"LT-2025-899","validade":date.today()+timedelta(days=200)},
+]
 
-    # SAIDA COM FIFO LOTE MAIS ANTIGO
-    if tipo=="SAIDA":
-        estoque = supabase.table("estoque").select("*").eq("id_produto", id_prod).eq("local", local_origem).order("data_fab").execute().data
-        restante = qtd_pal
-        for item in estoque:
-            if restante<=0: break
-            if item['qtd_paletes'] >= restante:
-                supabase.table("estoque").update({"qtd_paletes": item['qtd_paletes']-restante}).eq("id", item['id']).execute()
-                restante=0
-            else:
-                restante-=item['qtd_paletes']
-                supabase.table("estoque").delete().eq("id", item['id']).execute()
+if MOCK_MODE:
+    locais = locais_mock
+else:
+    locais = supabase.table("locais").select("*").execute().data
 
-        # ESPELHO
-        if local_origem=="GALPÃO" and dest_local in ["SALA ANEXA","OFICINA DE REVESTIMENTO DE CUBAS"]:
-            supabase.table("estoque").insert({
-                "local":dest_local,"tipo_local":"Geral","id_produto":id_prod,"nome":base['nome'],
-                "marca":marca,"lote":lote,"data_fab":now_brt().isoformat(),"qtd_paletes":qtd_pal,
-                "entrada_em":now_brt().isoformat()
-            }).execute()
-            acao="TRANSFERÊNCIA AUTOMÁTICA"
-            detalhe=f"SAÍDA Galpão -> ENTRADA {dest_local} | ID {id_prod} | {qtd_pal} pal | {fmt_brt(now_brt())}"
-        elif local_origem=="SALA ANEXA" and dest_local=="OFICINA DE REVESTIMENTO DE CUBAS":
-            supabase.table("estoque").insert({
-                "local":dest_local,"tipo_local":"Geral","id_produto":id_prod,"nome":base['nome'],
-                "marca":marca,"lote":lote,"data_fab":now_brt().isoformat(),"qtd_paletes":qtd_pal,
-                "entrada_em":now_brt().isoformat()
-            }).execute()
-            acao="TRANSFERÊNCIA AUTOMÁTICA"
-            detalhe=f"SAÍDA Sala -> ENTRADA Oficina | ID {id_prod} | {qtd_pal} pal"
-        else:
-            acao="SAÍDA"
-            detalhe=f"SAÍDA {local_origem} | ID {id_prod} | {qtd_pal} pal | {'BAIXA DEFINITIVA' if local_origem=='OFICINA DE REVESTIMENTO DE CUBAS' else ''} | {fmt_brt(now_brt())}"
-    else: # ENTRADA
-        supabase.table("estoque").insert({
-            "local":local_origem,"tipo_local":tipo_dest,"id_produto":id_prod,"nome":base['nome'],
-            "marca":marca,"lote":lote,"data_fab":now_brt().isoformat(),"qtd_paletes":qtd_pal,
-            "entrada_em":now_brt().isoformat()
-        }).execute()
-        if local_origem in ["SALA ANEXA","OFICINA DE REVESTIMENTO DE CUBAS"]:
-            # baixa auto no galpão
-            estoque_g = supabase.table("estoque").select("*").eq("id_produto", id_prod).eq("local","GALPÃO").order("data_fab").execute().data
-            rest = qtd_pal
-            for it in estoque_g:
-                if rest<=0: break
-                if it['qtd_paletes']>=rest:
-                    supabase.table("estoque").update({"qtd_paletes": it['qtd_paletes']-rest}).eq("id", it['id']).execute()
-                    rest=0
-                else:
-                    rest-=it['qtd_paletes']
-                    supabase.table("estoque").delete().eq("id", it['id']).execute()
-            acao="TRANSFERÊNCIA AUTOMÁTICA"
-            detalhe=f"ENTRADA {local_origem} -> SAÍDA Galpão auto | ID {id_prod} | {qtd_pal} pal | BRT {fmt_brt(now_brt())}"
-        else:
-            acao="ENTRADA"
-            detalhe=f"ENTRADA {local_origem} | ID {id_prod} | {qtd_pal} pal | {marca} | {lote} | BRT {fmt_brt(now_brt())}"
+local_map = {l['codigo']: l['id'] for l in locais}
+local_labels = [f"{l['codigo']} - {l['nome']}" for l in locais]
+local_atual_label = st.sidebar.selectbox("Você está em qual Local?", local_labels)
+codigo_local_atual = local_atual_label.split(" - ")[0]
+id_local_atual = local_map[codigo_local_atual]
 
-    supabase.table("historico_uso").insert({
-        "usuario":"ALMIR","acao":acao,"id_produto":id_prod,"qtd":qtd_pal,"detalhe":detalhe,"data":now_brt().isoformat()
-    }).execute()
-    st.success(f"{acao} OK - {detalhe}")
+st.sidebar.divider()
+filtro_tempo = st.sidebar.segmented_control("📅 Filtro Tempo - Entradas/Saídas TODOS LOCAIS", ["DIÁRIA","SEMANAL","MENSAL","SEMESTRAL","ANUAL"], default="MENSAL")
 
-# TELAS
-if menu=="ESTOQUE GERAL":
-    st.header("ESTOQUE GERAL = Galpão+Sala+Oficina BRT")
-    res = supabase.table("estoque").select("*").execute()
-    df = pd.DataFrame(res.data)
-    st.metric("Total Paletes", df['qtd_paletes'].sum() if not df.empty else 0)
-    if not df.empty: st.dataframe(df)
+tabs = st.tabs(["📊 Estoque Geral", "📥 Entrada", "📤 Saída", "📈 Tempo", "⚙️ Materiais"])
 
-elif menu in ["GALPÃO","SALA ANEXA","OFICINA DE REVESTIMENTO DE CUBAS"]:
-    local=menu
-    st.header(f"{local} - {fmt_brt(now_brt())}")
-    bases = get_bases()
-    if local=="GALPÃO":
-        with st.expander("CADASTRO BASE - Só Galpão"):
-            with st.form("cad"):
-                id_c=st.text_input("ID 01-17","01")
-                nome_c=st.text_input("Nome","CIMENTO TOK-70")
-                marcas_c=st.text_input("Marcas vírgula","TOK, Refrasil")
-                qtd_p=st.number_input("QTD/palete",1,1000,40)
-                uni=st.selectbox("Unidade",["sacos","tijolos","kg","m²","bags"])
-                if st.form_submit_button("Cadastrar"):
-                    supabase.table("produtos_base").upsert({
-                        "id":id_c,"nome":nome_c,"marcas":[m.strip() for m in marcas_c.split(",")],
-                        "qtd_por_palete":qtd_p,"unidade":uni
-                    }).execute()
-                    supabase.table("historico_uso").insert({"usuario":"ALMIR","acao":"CADASTRO","id_produto":id_c,"detalhe":f"Cadastro ID {id_c}","data":now_brt().isoformat()}).execute()
-                    st.success("Cadastrado! Agora habilite nos outros locais.")
+with tabs[0]:
+    if MOCK_MODE:
+        df = pd.DataFrame(gavetas_mock)
+        df['total_geral'] = df['local1']+df['local2']+df['local3']
+    else:
+        estoque = supabase.table("vw_estoque_geral").select("*").execute().data
+        df = pd.DataFrame(estoque)
 
-    # Lista IDs
-    ids_disp=[b['id'] for b in bases]
-    tipo_mov=st.selectbox("TIPO", ["ENTRADA","SAÍDA"])
-    id_sel=st.selectbox("ID", ids_disp) if ids_disp else None
-    qtd_pal=st.number_input("QTD PALETES",1,1000,1)
-    with st.expander("OUTROS"):
-        base_sel=next((b for b in bases if b['id']==id_sel),None)
-        marcas_opt=base_sel['marcas'] if base_sel else ["-"]
-        marca_sel=st.selectbox("Marca", marcas_opt)
-        lote_sel=st.text_input("Lote", f"LOTE-{now_brt().strftime('%d%m%Y')}")
-        if local=="GALPÃO" and tipo_mov=="SAÍDA":
-            dest=st.selectbox("Destino", ["SALA ANEXA","OFICINA DE REVESTIMENTO DE CUBAS"])
-        elif local=="SALA ANEXA" and tipo_mov=="SAÍDA":
-            dest=st.selectbox("Destino", ["OFICINA DE REVESTIMENTO DE CUBAS","FINAL"])
-        else:
-            dest=st.selectbox("Tipo", ["Geral","Segregado"])
-
-    if st.button("CONFIRMAR FIFO lote mais antigo"):
-        if id_sel:
-            # pega lote mais antigo auto para saída
-            est = supabase.table("estoque").select("*").eq("id_produto",id_sel).eq("local",local).order("data_fab").execute().data
-            lote_auto = est[0]['lote'] if est and tipo_mov=="SAÍDA" else lote_sel
-            movimentar(tipo_mov, local, id_sel, qtd_pal, marca_sel, lote_auto, dest_local=dest if 'SALA' in dest or 'OFICINA' in dest else None, tipo_dest=dest)
-
-elif menu=="GRÁFICOS POR ID":
-    st.header("GRÁFICOS 4 Modelos Coloridos")
-    bases=get_bases()
-    ids_all=[b['id'] for b in bases]
-    if ids_all:
-        id_g=st.selectbox("ID", ids_all)
-        res=supabase.table("estoque").select("*").eq("id_produto",id_g).execute()
-        df=pd.DataFrame(res.data)
-        st.metric("Paletes", df['qtd_paletes'].sum() if not df.empty else 0)
-        hist=supabase.table("historico_uso").select("*").eq("id_produto",id_g).order("data", desc=True).limit(1).execute()
-        if hist.data: st.info(f"Última: {hist.data[0]['detalhe']} por {hist.data[0]['usuario']}")
-        modelo=st.selectbox("Modelo", ["1-Barra Horizontal","2-Pizza","3-Coluna Vertical","4-Cards"])
-        if not df.empty:
-            import matplotlib.pyplot as plt
-            por=df.groupby('local')['qtd_paletes'].sum()
-            fig, ax = plt.subplots()
-            if "1" in modelo: ax.barh(por.index, por.values, color=['green','blue','orange'])
-            elif "2" in modelo: ax.pie(por.values, labels=por.index, autopct='%1.1f%%')
-            else: ax.bar(por.index, por.values, color=['#2ecc71','#3498db','#e67e22'])
-            st.pyplot(fig)
-
-elif menu=="HISTÓRICO":
-    st.header("HISTÓRICO ALMIR - BRT")
-    res=supabase.table("historico_uso").select("*").order("data", desc=True).execute()
-    df=pd.DataFrame(res.data)
     if not df.empty:
-        df['data_brt']=pd.to_datetime(df['data']).dt.tz_convert(BR_TZ).dt.strftime("%d/%m/%Y %H:%M:%S BRT")
-        st.dataframe(df[['data_brt','usuario','acao','detalhe']])
-        txt="\n".join([f"{r['data_brt']} - {r['usuario']} - {r['acao']} - {r['detalhe']}" for _,r in df.iterrows()])
-        st.text_area("Export WhatsApp BRT", txt, height=300)
+        # Grafico 1 - EMPILHADO HORIZONTAL POR ID - SOMA 3 LOCAIS
+        fig = go.Figure()
+        fig.add_trace(go.Bar(y=df['codigo'], x=df['local1'] if 'local1' in df else [95,60,30,120], name='LOCAL 1 MATRIZ', orientation='h', marker_color='#1E40AF'))
+        fig.add_trace(go.Bar(y=df['codigo'], x=df['local2'] if 'local2' in df else [45,80,30,10], name='LOCAL 2', orientation='h', marker_color='#10B981'))
+        fig.add_trace(go.Bar(y=df['codigo'], x=df['local3'] if 'local3' in df else [35,20,60,10], name='LOCAL 3', orientation='h', marker_color='#F59E0B'))
+        fig.update_layout(barmode='stack', height=380, title="ESTOQUE GERAL POR ID - Cada cor é um local, comprimento = SOMA")
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Dashboard ludico + ultima retirada + lote e validade
+        st.subheader("🎯 Dashboard Lúdico + Última Retirada + Lote e Validade")
+        cols = st.columns(4)
+        for i, row in df.iterrows() if MOCK_MODE else enumerate(df.to_dict('records')):
+            if MOCK_MODE:
+                r = row
+                total = r['total_geral']
+                dias = (r['validade'] - date.today()).days
+            else:
+                r = row
+                total = r.get('total_geral',0)
+                dias = 45
+            badge_class = "badge-verde" if dias>90 else "badge-amarelo" if dias>30 else "badge-vermelho"
+            badge_text = f"Val: {r['validade'] if MOCK_MODE else '08/10/2025'} ({dias}d)"
+            with cols[i % 4]:
+                st.markdown(f"""
+                <div class="card" style="border-top:7px solid {r.get('cor','#1E40AF')}">
+                    <div style="font-weight:900">{r['codigo']} - {r.get('nome') or r.get('gaveta')}</div>
+                    <div class="big-number">{total}</div>
+                    <div style="text-align:center; color:#6B7280">un em estoque geral</div>
+                    <hr>
+                    ⬇️ Última: <b>{r.get('ultima_qtd',12)} un</b><br>
+                    📦 Lote: {r.get('lote','LT-2025-882')}<br><br>
+                    <span class="{badge_class}">⚠️ {badge_text}</span><br>
+                    <small style="color:#9CA3AF">L1:{r.get('local1',0)} L2:{r.get('local2',0)} L3:{r.get('local3',0)}</small>
+                </div>
+                """, unsafe_allow_html=True)
+
+with tabs[1]:
+    st.subheader("📥 Entrada - Modo: "+modo_entrada)
+    materiais_lista = [m['nome'] for m in materiais_mock if m['ativo']] + ["OUTRO..."]
+    mat = st.selectbox("Material (só ATIVOS + OUTRO)", materiais_lista)
+    gav = st.selectbox("ID / Gaveta", [g['codigo']+" - "+g['nome'] for g in gavetas_mock])
+    qtd = st.number_input("Qtd", 1, 1000, 10)
+    lote = st.text_input("Lote", "LT-2025-882")
+    val = st.date_input("Validade", date.today()+timedelta(days=90))
+    if modo_entrada=="MANUAL":
+        local_dest = st.selectbox("Computar entrada em qual local?", [l['codigo'] for l in locais])
+    else:
+        local_dest = codigo_local_atual
+        st.info(f"Automático: vai entrar em {local_dest}")
+
+    if mat=="OUTRO...":
+        outro = st.text_input("Nome material avulso")
+        if st.checkbox("Ativar esse material?"):
+            st.success(f"{outro} ativado!")
+
+    if st.button("✅ Confirmar ENTRADA", type="primary", use_container_width=True):
+        st.success(f"Entrada {qtd} de {mat} em {gav} no {local_dest} [{modo_entrada}]")
+        st.balloons()
+
+with tabs[2]:
+    st.subheader("📤 Saída - Só ATIVOS aparecem - Modo: "+modo_saida)
+    mat_s = st.selectbox("Material ATIVO", materiais_lista, key="ms")
+    gav_s = st.selectbox("ID / Gaveta", [g['codigo']+" - "+g['nome'] for g in gavetas_mock], key="gs")
+    qtd_s = st.number_input("Qtd Saída", 1, 1000, 5, key="qs")
+    if modo_saida=="MANUAL":
+        local_sai = st.selectbox("Computar saída de qual local?", [l['codigo'] for l in locais], key="ls")
+    else:
+        local_sai = codigo_local_atual
+        st.info(f"Automático: vai sair de {local_sai}")
+    if st.button("✅ Confirmar SAÍDA", type="primary", use_container_width=True):
+        st.warning(f"Saída {qtd_s} de {mat_s} em {gav_s} do {local_sai} [{modo_saida}] - Estoque Geral atualizado!")
+
+with tabs[3]:
+    st.subheader(f"📈 {filtro_tempo} - Entradas e Saídas em TODOS OS LOCAIS")
+    labels = {"DIÁRIA":["21/09","22/09","23/09","24/09","25/09","26/09"],"SEMANAL":["Sem 1","Sem 2","Sem 3","Sem 4","Sem 5"],"MENSAL":["Abr","Mai","Jun","Jul","Ago","Set"],"SEMESTRAL":["2024-S2","2025-S1","2025-S2"],"ANUAL":["2022","2023","2024","2025","2026"]}[filtro_tempo]
+    ent = [20,35,28,40,32,45][:len(labels)]
+    sai = [15,28,22,38,30,40][:len(labels)]
+    fig2 = go.Figure()
+    fig2.add_bar(x=labels, y=ent, name="ENTRADAS", marker_color="#10B981")
+    fig2.add_bar(x=labels, y=sai, name="SAÍDAS", marker_color="#EF4444")
+    fig2.update_layout(barmode="group", height=350)
+    st.plotly_chart(fig2, use_container_width=True)
+
+with tabs[4]:
+    st.subheader("⚙️ Materiais - Marcar ATIVOS")
+    for m in materiais_mock:
+        m['ativo'] = st.checkbox(m['nome'], value=m['ativo'], key="mat_"+m['nome'])
