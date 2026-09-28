@@ -1,62 +1,70 @@
 import streamlit as st
 import pandas as pd
+from supabase import create_client
 
 st.set_page_config(page_title="Estoque Simples", layout="centered")
 
-# DADOS DA SUA TABELA - já com saldo inicial da foto
-if "estoque" not in st.session_state:
-    st.session_state.estoque = [
-        {"ID": 1, "DESCRICAO": "CIMENTO - FONDU", "QTD": 12.0},
+# CONEXÃO SUPABASE - coloca suas keys em Settings > Secrets no Streamlit Cloud
+try:
+    supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+    MODO_SUPABASE = True
+except:
+    MODO_SUPABASE = False
+    st.warning("MODO LOCAL - Configure Secrets pra salvar no Supabase")
+
+# BUSCA ESTOQUE
+def carregar_estoque():
+    if MODO_SUPABASE:
+        try:
+            res = supabase.table("estoque_simples").select("*").order("ID").execute()
+            if res.data:
+                return res.data
+        except:
+            pass
+    # Fallback local com dados da sua foto
+    return [
+        {"ID": 1, "DESCRICAO": "CIMENTO - FONDU", "QTD": 12},
         {"ID": 2, "DESCRICAO": "CARBETO DE SILICIO - SHINAGAWA", "QTD": 2.5},
-        {"ID": 3, "DESCRICAO": "ARGAMASSA REFRATARIA - TECNOFIRE", "QTD": 5.0},
-        {"ID": 4, "DESCRICAO": "CONCRETO REFRATARIO - CASTIBAR PSI UG", "QTD": 3.0},
-        {"ID": 5, "DESCRICAO": "LÃ DE ROCHA - IBAR", "QTD": 4.0},
-        {"ID": 6, "DESCRICAO": "TIJOLO SEMI ISOLANTE - MOSCONI AB 70", "QTD": 19.0},
-        {"ID": 7, "DESCRICAO": "TIJOLO ISOLANTE - MOSCONI AB 55", "QTD": 311.0},
-        {"ID": 8, "DESCRICAO": "TIJOLO REFRATARIO - SUPERIBAR AS ALUM", "QTD": 153.0},
-        {"ID": 9, "DESCRICAO": "CORDÃO DE BARRAS(GAXETA) - ITEELL", "QTD": 0.0},
-        {"ID": 10, "DESCRICAO": "PLACAS DE BANHO (VERMICULITA) - ITEELL", "QTD": 32.0},
-        {"ID": 11, "DESCRICAO": "CHAMOTE - IBAR", "QTD": 18.0},
-        {"ID": 12, "DESCRICAO": "PASTA FRIA - ELKEN", "QTD": 0.0},
-        {"ID": 13, "DESCRICAO": "PASTA FRIA - CARBON", "QTD": 0.0},
-        {"ID": 14, "DESCRICAO": "BLOCOS LATERAL - CARBON", "QTD": 0.0},
-        {"ID": 15, "DESCRICAO": "BLOCOS ENGUSADOS", "QTD": 0.0},
-        {"ID": 16, "DESCRICAO": "BARRAS CATÓDICAS - CEMAÇO", "QTD": 0.0},
-        {"ID": 17, "DESCRICAO": "BLOCOS DE FUNDO - SEC", "QTD": 0.0},
+        {"ID": 3, "DESCRICAO": "ARGAMASSA REFRATARIA - TECNOFIRE", "QTD": 5},
+        {"ID": 4, "DESCRICAO": "CONCRETO REFRATARIO", "QTD": 3},
+        {"ID": 5, "DESCRICAO": "LÃ DE ROCHA - IBAR", "QTD": 4},
+        {"ID": 6, "DESCRICAO": "TIJOLO SEMI ISOLANTE", "QTD": 19},
+        {"ID": 7, "DESCRICAO": "TIJOLO ISOLANTE", "QTD": 311},
+        {"ID": 8, "DESCRICAO": "TIJOLO REFRATARIO", "QTD": 153},
+        {"ID": 9, "DESCRICAO": "CORDÃO DE BARRAS", "QTD": 0},
+        {"ID": 10, "DESCRICAO": "PLACAS DE BANHO", "QTD": 32},
+        {"ID": 11, "DESCRICAO": "CHAMOTE - IBAR", "QTD": 18},
+        {"ID": 12, "DESCRICAO": "PASTA FRIA - ELKEN", "QTD": 0},
+        {"ID": 13, "DESCRICAO": "PASTA FRIA - CARBON", "QTD": 0},
+        {"ID": 14, "DESCRICAO": "BLOCOS LATERAL", "QTD": 0},
+        {"ID": 15, "DESCRICAO": "BLOCOS ENGUSADOS", "QTD": 0},
+        {"ID": 16, "DESCRICAO": "BARRAS CATÓDICAS", "QTD": 0},
+        {"ID": 17, "DESCRICAO": "BLOCOS DE FUNDO", "QTD": 0},
     ]
 
-st.title("🧱 ESTOQUE - SIMPLES")
+if "estoque" not in st.session_state:
+    st.session_state.estoque = carregar_estoque()
 
-df = pd.DataFrame(st.session_state.estoque)
-st.dataframe(df, use_container_width=True, hide_index=True)
+st.title("🧱 ESTOQUE - ID | QTD | ENTRADA/SAÍDA")
+st.dataframe(pd.DataFrame(st.session_state.estoque), use_container_width=True, hide_index=True)
 
 st.divider()
-st.subheader("Movimentação")
+id_sel = st.selectbox("ID", [f"{x['ID']} - {x['DESCRICAO']}" for x in st.session_state.estoque])
+id_num = int(id_sel.split(" - ")[0])
 
-id_selecionado = st.selectbox("Selecione o ID", [f"{x['ID']} - {x['DESCRICAO']}" for x in st.session_state.estoque])
-id_num = int(id_selecionado.split(" - ")[0])
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    qtd = st.number_input("QTD", min_value=0.1, value=1.0, step=1.0)
-with col2:
-    tipo = st.radio("Tipo", ["ENTRADA", "SAÍDA"], horizontal=True)
-with col3:
-    st.write("")
-    st.write("")
+c1,c2,c3 = st.columns(3)
+with c1: qtd = st.number_input("QTD", 0.1, 10000.0, 1.0)
+with c2: tipo = st.radio("Tipo", ["ENTRADA","SAÍDA"], horizontal=True)
+with c3:
     if st.button("CONFIRMAR", type="primary", use_container_width=True):
         for item in st.session_state.estoque:
             if item["ID"] == id_num:
-                if tipo == "ENTRADA":
-                    item["QTD"] += qtd
-                else:
-                    if item["QTD"] >= qtd:
-                        item["QTD"] -= qtd
-                    else:
-                        st.error(f"Saldo insuficiente! Tem só {item['QTD']}")
-                        st.stop()
-                st.success(f"{tipo} de {qtd} no ID {id_num} OK!")
+                nova_qtd = item["QTD"] + qtd if tipo=="ENTRADA" else item["QTD"] - qtd
+                if nova_qtd < 0:
+                    st.error(f"Sem saldo! Tem {item['QTD']}")
+                    st.stop()
+                item["QTD"] = nova_qtd
+                if MODO_SUPABASE:
+                    supabase.table("estoque_simples").update({"QTD": nova_qtd}).eq("ID", id_num).execute()
+                st.success(f"{tipo} OK! Novo saldo: {nova_qtd}")
                 st.rerun()
-
-item_atual = next(x for x in st.session_state.estoque if x["ID"] == id_num)
-st.metric(f"QTD ATUAL - ID {id_num}", item_atual["QTD"])
